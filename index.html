@@ -19,14 +19,16 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
+        /* 아이폰 사파리 튕김 방지 (고정) */
         html, body { 
-            width: 100%; height: 100dvh; margin: 0; 
-            overflow: hidden; 
+            position: fixed; 
+            width: 100%; height: 100%; 
+            margin: 0; overflow: hidden; 
             background: var(--bg-color); 
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; 
             color: var(--text-color);
             overscroll-behavior: none; 
-            touch-action: pan-y; 
+            touch-action: none; 
         }
         
         /* === 헤더 === */
@@ -60,7 +62,7 @@
 
         /* === 메인 레이아웃 === */
         #app-container {
-            display: flex; width: 100%; height: calc(100dvh - 60px); position: relative;
+            display: flex; width: 100%; height: calc(100% - 60px); position: relative;
         }
 
         /* 1. 에디터 패널 */
@@ -85,6 +87,7 @@
             flex: 1; width: 100%; background: #151515; color: #ccc; border: none; 
             padding: 20px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; line-height: 1.6; resize: none; 
             white-space: pre-wrap; word-break: break-all; overflow-x: hidden; 
+            overflow-y: auto; touch-action: pan-y; 
         }
 
         /* 2. 프리뷰 영역 */
@@ -93,6 +96,7 @@
             display: flex; flex-direction: column; background-color: #121212;
             background-image: radial-gradient(#252525 1px, transparent 1px); background-size: 24px 24px;
             transition: all 0.3s;
+            touch-action: none; 
         }
         
         .scroll-area {
@@ -100,6 +104,8 @@
             padding: 40px; 
             transition: padding 0.3s ease;
             overflow-x: hidden; 
+            touch-action: pan-x pan-y; 
+            -webkit-overflow-scrolling: touch;
         }
         .editor-open-mode .scroll-area { padding: 10px; }
 
@@ -118,34 +124,47 @@
         .mode-pc { width: 1050px; height: 900px; }
         .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 40px; }
 
-        /* [버튼 스타일 & 위치 수정] */
+        /* [수정: 상단 이동 + 반투명 효과] */
         #slide-toggle-btn {
             position: absolute; 
-            /* [요청 2] 위치 상향 조정: 40% -> 30% */
-            top: 30%; 
-            left: 0; 
-            transform: translateY(-50%);
-            width: 24px; height: 50px; background: #333; 
-            border: 1px solid #444; border-left: none;
-            border-top-right-radius: 8px; border-bottom-right-radius: 8px;
-            z-index: 60; cursor: pointer; color: #888; display: flex; align-items: center; justify-content: center;
+            top: 80px; /* 헤더 아래쪽 상단으로 이동 */
+            left: 10px; 
+            transform: translateY(0); /* 상단 기준이라 중앙 정렬 해제 */
+            width: 30px; height: 50px; 
+            
+            /* 반투명 배경 & 블러 효과 */
+            background: rgba(40, 40, 40, 0.65); 
+            backdrop-filter: blur(4px);
+            
+            border-radius: 8px; 
+            border: 1px solid rgba(255, 255, 255, 0.2); /* 테두리도 은은하게 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+
+            z-index: 60; cursor: pointer; color: #ccc; display: flex; align-items: center; justify-content: center;
             font-size: 10px;
             transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
         }
-        #slide-toggle-btn:hover { background: #444; color: #fff; }
+        #slide-toggle-btn:hover { 
+            background: rgba(60, 60, 60, 0.8); 
+            color: #fff; 
+            border-color: rgba(255, 255, 255, 0.4); 
+        }
 
         /* [PC] 패널이 열리면 버튼 이동 */
-        #editor-panel.open ~ #slide-toggle-btn { left: 40%; }
+        #editor-panel.open ~ #slide-toggle-btn { 
+            left: calc(40% - 15px); 
+        }
 
         /* 모달 스타일 */
         .code-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center;
+            touch-action: none; 
         }
         .code-overlay.open { display: flex; }
         .editor-modal { width: 700px; height: 80%; background: #222; border: 1px solid #444; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .modal-ta { flex: 1; background: #111; border: 1px solid #333; color: #ccc; padding: 15px; border-radius: 8px; resize: none; margin-bottom: 15px; }
+        .modal-ta { flex: 1; background: #111; border: 1px solid #333; color: #ccc; padding: 15px; border-radius: 8px; resize: none; margin-bottom: 15px; touch-action: pan-y;}
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
         /* 🚨 모바일 최적화 */
@@ -170,16 +189,13 @@
             }
             #editor-panel.open { width: 85%; } 
 
-            /* [모바일 버튼 위치 보정] */
             #slide-toggle-btn { 
-                left: 0; 
+                left: 10px; 
                 display: flex !important;
             }
-            /* [요청 1] 패널이 85% 열리면 버튼도 85% 지점으로 정확히 이동 */
+            
             #editor-panel.open ~ #slide-toggle-btn { 
-                left: 85%; 
-                /* 혹시 모를 겹침 방지를 위해 border-left를 살려줌 */
-                border-left: 1px solid #444; 
+                left: calc(85% - 15px); 
             } 
 
             .editor-modal { width: 90%; height: 90%; }
