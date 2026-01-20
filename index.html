@@ -180,8 +180,6 @@
             #editor-panel.open ~ #slide-toggle-btn { left: calc(85% - 15px); } 
 
             .editor-modal { width: 90%; height: 90%; }
-            
-            #scale-wrapper { margin-bottom: 20vh; }
         }
     </style>
 </head>
@@ -336,23 +334,23 @@
             const availableHeight = scrollArea.clientHeight;
 
             if (currentMode === 'mobile') {
-                // [수정] 모바일 모드: 가로(375)뿐 아니라 세로(812)도 화면에 들어오게 계산
+                // [요청사항 반영] 사용자의 디스플레이 세로 높이에 카드 맞춤
                 const baseWidth = 375 + 40; 
-                const baseHeight = 812 + 60; 
+                const baseHeight = 812; // 모바일 카드의 기준 높이
                 
+                // 가로 배율과 세로 배율 중 더 작은 쪽을 선택하여 화면에 쏙 넣음
                 const scaleW = availableWidth / baseWidth;
-                const scaleH = availableHeight / baseHeight;
+                const scaleH = (availableHeight - 60) / baseHeight; // 하단 여백 공간 확보용 -60
                 
-                // 가로/세로 중 더 많이 축소해야 하는 쪽에 맞춰 전체 비율 유지
                 let scale = Math.min(scaleW, scaleH, 1);
                 scaleWrapper.style.transform = `scale(${scale})`;
                 
-                // 모바일 모드는 스크롤 여백 최소화
-                scaleWrapper.style.marginBottom = '20px'; 
+                // [요청사항 반영] 하단에 약 40px의 시각적 여백 추가
+                scaleWrapper.style.marginBottom = '40px'; 
                 return;
             }
 
-            // [PC 모드] - 절대 건드리지 말 것 (이전 고정 방식 유지)
+            // [PC 모드] - 원본 롤백 버전의 로직 유지
             const targetWidth = 1080; 
             const isMobileScreen = window.innerWidth <= 768;
             const padding = editorPanel.classList.contains('open') ? 20 : (isMobileScreen ? 20 : 80);
