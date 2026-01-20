@@ -19,7 +19,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* [아이폰 사파리 전체 튕김 방지] */
+        /* [아이폰 사파리 튕김 방지] */
         html, body { 
             position: fixed; 
             width: 100%; height: 100%; 
@@ -105,8 +105,6 @@
             overflow-x: hidden; 
             touch-action: pan-x pan-y;
             -webkit-overflow-scrolling: touch;
-            /* [핵심 수정] 모바일에서 스크롤 끝에 닿았을 때 부모(body)로 튕김 전파 차단 */
-            overscroll-behavior: none; 
         }
         .editor-open-mode .scroll-area { padding: 10px; }
 
@@ -187,7 +185,7 @@
         }
     </style>
 </head>
-<body class="editor-open-mode"> 
+<body> 
 
     <header>
         <div class="brand">YUMGOOD</div>
@@ -216,7 +214,7 @@
             <textarea id="live-editor" placeholder="여기에 코드를 입력하세요." spellcheck="false"></textarea>
         </div>
 
-        <div id="slide-toggle-btn" onclick="toggleEditor()" title="에디터 열기/접기">◀</div>
+        <div id="slide-toggle-btn" onclick="toggleEditor()" title="에디터 열기/접기">▶</div>
 
         <main>
             <div class="scroll-area">
@@ -261,29 +259,24 @@
 
         // iOS 스크롤 튕김 방지
         document.addEventListener('touchmove', function(e) {
-            // 스크롤 가능한 영역 내부에서는 터치 허용 (단, 그 영역이 끝에 도달했을 때의 튕김은 CSS overscroll-behavior가 막아줌)
             if (e.target.closest('#live-editor') || 
                 e.target.closest('.modal-ta') || 
                 e.target.closest('.controls') ||
                 e.target.closest('.scroll-area')) {
                 return; 
             }
-            e.preventDefault(); // 그 외 배경 터치는 원천 차단
+            e.preventDefault();
         }, { passive: false });
 
-        // === 1. 에디터 토글 ===
         function toggleEditor() {
             const isOpen = editorPanel.classList.toggle('open');
             document.body.classList.toggle('editor-open-mode', isOpen);
-            
             toggleBtn.innerText = isOpen ? "◀" : "▶";
-            
             setTimeout(fitToScreen, 50);  
             setTimeout(fitToScreen, 200); 
             setTimeout(fitToScreen, 360); 
         }
 
-        // === 2. 실시간 에디터 ===
         liveEditor.addEventListener('input', function() {
             const code = this.value;
             currentCode = code;
@@ -292,14 +285,12 @@
             debounceTimer = setTimeout(() => updatePreview(code), 300);
         });
 
-        // === 3. 파일/코드 로드 ===
         function loadFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 setCode(e.target.result);
-                // 자동 열림 방지
                 event.target.value = ''; 
             };
             reader.readAsText(file, 'UTF-8');
@@ -316,7 +307,6 @@
         function applyModalCode() {
             setCode(modalInput.value);
             closePasteModal();
-            // 자동 열림 방지
         }
 
         function copyEditor() {
@@ -341,28 +331,29 @@
             frame.src = currentBlobUrl;
         }
 
-        // === 4. 화면 배율 자동 조정 ===
         function fitToScreen() {
+            const availableWidth = scrollArea.clientWidth;
+            const availableHeight = scrollArea.clientHeight;
+
             if (currentMode === 'mobile') {
-                const requiredWidth = 375 + 40; 
-                const availableWidth = window.innerWidth;
+                // [수정] 모바일 모드: 가로(375)뿐 아니라 세로(812)도 화면에 들어오게 계산
+                const baseWidth = 375 + 40; 
+                const baseHeight = 812 + 60; 
                 
-                if (availableWidth < requiredWidth) {
-                    let scale = availableWidth / requiredWidth;
-                    scaleWrapper.style.transform = `scale(${scale})`;
-                } else {
-                    scaleWrapper.style.transform = 'scale(1)';
-                }
+                const scaleW = availableWidth / baseWidth;
+                const scaleH = availableHeight / baseHeight;
                 
-                // 모바일 모드는 스크롤 문제가 없으므로 기본 여백만 적용
-                scaleWrapper.style.marginBottom = '100px'; 
+                // 가로/세로 중 더 많이 축소해야 하는 쪽에 맞춰 전체 비율 유지
+                let scale = Math.min(scaleW, scaleH, 1);
+                scaleWrapper.style.transform = `scale(${scale})`;
+                
+                // 모바일 모드는 스크롤 여백 최소화
+                scaleWrapper.style.marginBottom = '20px'; 
                 return;
             }
 
-            // [PC 모드]
+            // [PC 모드] - 절대 건드리지 말 것 (이전 고정 방식 유지)
             const targetWidth = 1080; 
-            let availableWidth = scrollArea.clientWidth; 
-
             const isMobileScreen = window.innerWidth <= 768;
             const padding = editorPanel.classList.contains('open') ? 20 : (isMobileScreen ? 20 : 80);
             
@@ -372,11 +363,9 @@
             
             scaleWrapper.style.transform = `scale(${scale})`;
 
-            // 여백 계산
             const h = wrapper.offsetHeight; 
             const buffer = isMobileScreen ? '20vh' : '100px'; 
             const negativeMargin = h * (1 - scale);
-            
             scaleWrapper.style.marginBottom = `calc(-${negativeMargin}px + ${buffer})`;
         }
 
@@ -390,13 +379,11 @@
             currentMode = mode;
             wrapper.className = 'iframe-container';
             wrapper.classList.add('mode-' + mode);
-            
             fitToScreen();
         }
 
         function refreshFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); }
 
-        // 초기화: 버튼 라벨을 ▶로 맞춤
         toggleBtn.innerText = "▶";
         fitToScreen();
     </script>
