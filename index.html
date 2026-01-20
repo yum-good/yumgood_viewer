@@ -107,7 +107,7 @@
             justify-content: center;
             align-items: flex-start;
             
-            /* 패딩: 하단을 120px로 유지하여 시스템 바 간섭 방지 */
+            /* 패딩 유지 */
             padding: 40px 40px 120px 40px;
             
             background-image: 
@@ -190,8 +190,20 @@
         .editor-actions { margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
         .editor-actions .btn { border-radius: 12px; height: 44px; font-size: 14px; padding: 0 20px; }
         
+        /* 버튼 컬러 */
         .btn-run { background: #fff; color: #000; border: none; font-weight: 800; }
         .btn-close { border: 1px solid #555; color: #aaa; }
+
+        /* 삭제 버튼 (빨간색 계열) */
+        .btn-clear {
+            margin-right: auto; /* 왼쪽 구석으로 밀기 */
+            border: 1px solid #843b3b;
+            color: #ff6b6b;
+        }
+        .btn-clear:hover {
+            background: #843b3b;
+            color: #fff;
+        }
 
         /* === 📱 모바일 전용 미디어 쿼리 === */
         @media (max-width: 768px) {
@@ -205,7 +217,6 @@
                 justify-content: flex-start;
             }
             
-            /* 모바일에서 하단 여백 더 확보 */
             main { padding: 20px 10px 150px 10px; }
 
             .editor-modal { 
@@ -251,6 +262,7 @@
             </div>
             <textarea id="codeInput"></textarea>
             <div class="editor-actions">
+                <button class="btn btn-clear" onclick="clearCode()">전체삭제</button>
                 <button class="btn btn-close" onclick="toggleEditor()">닫기</button>
                 <button class="btn btn-run" onclick="runCode()">실행</button>
             </div>
@@ -279,6 +291,15 @@
             updateCharCount(this.value);
         });
 
+        // 코드 전체 삭제 기능
+        function clearCode() {
+            if(confirm("입력된 코드를 전부 삭제하시겠습니까?")) {
+                codeInput.value = "";
+                updateCharCount("");
+                codeInput.focus();
+            }
+        }
+
         function loadFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -294,10 +315,7 @@
 
         function runCode() {
             const code = codeInput.value;
-            if (!code.trim()) {
-                alert("코드를 입력해주세요.");
-                return;
-            }
+            // 빈 코드 실행 허용 (삭제 후 실행할 수도 있으므로)
             updatePreview(code);
             toggleEditor();
         }
