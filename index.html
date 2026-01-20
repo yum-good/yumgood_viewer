@@ -22,14 +22,11 @@
 
         html, body {
             width: 100%;
-            /* 100vh 대신 100dvh 사용 (모바일 주소창 대응) */
-            height: 100dvh; 
+            height: 100dvh; /* 모바일 주소창 대응 */
             margin: 0; padding: 0;
-            overflow: hidden; /* body 자체 스크롤 막음 (main에서 처리) */
-            
-            /* 핵심: 화면 전체가 튕겨 올라가는 것 방지 */
-            overscroll-behavior: none; 
-            position: fixed; /* 화면 고정 */
+            overflow: hidden; /* body 자체 스크롤 막음 */
+            overscroll-behavior: none; /* 튕김 방지 */
+            position: fixed;
         }
 
         body {
@@ -111,7 +108,7 @@
             /* 메인 영역에서만 스크롤 허용 */
             overflow-y: auto; 
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 (iOS) */
+            -webkit-overflow-scrolling: touch;
             
             display: flex;
             justify-content: center;
@@ -136,15 +133,23 @@
             border: 12px solid var(--frame-border);
             border-radius: 20px;
             max-width: 100%;
-            
-            /* iframe 내부 스크롤 문제 방지 */
             transform: translateZ(0); 
         }
 
         iframe { width: 100%; height: 100%; border: none; background: #fff; display: block; }
 
+        /* === 뷰 모드 스타일 수정됨 === */
         .mode-pc { width: 95%; height: 95%; max-width: 1600px; } 
-        .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 36px; }
+        
+        /* 모바일 모드: content-box 적용으로 내부 375px 확보 */
+        .mode-mobile { 
+            box-sizing: content-box; /* 핵심 수정: 테두리를 너비에 포함하지 않음 */
+            width: 375px; 
+            height: 812px; 
+            border-width: 14px; 
+            border-radius: 40px;
+            box-shadow: 0 0 0 2px #333, 0 20px 50px rgba(0,0,0,0.5);
+        }
 
         /* === 코드 입력 모달 === */
         .code-overlay {
@@ -155,8 +160,6 @@
             display: none;
             justify-content: center;
             align-items: center;
-            
-            /* 모달 띄웠을 때 뒤쪽 스크롤 방지 */
             touch-action: none;
         }
         .code-overlay.open { display: flex; animation: fadeIn 0.2s ease-out; }
@@ -208,6 +211,7 @@
         .btn-clear { margin-right: auto; border: 1px solid #843b3b; color: #ff6b6b; }
         .btn-clear:hover { background: #843b3b; color: #fff; }
 
+        /* === 📱 모바일 기기 반응형 === */
         @media (max-width: 768px) {
             header { padding: 0 12px; }
             .brand span { display: none; }
@@ -219,7 +223,14 @@
             .editor-modal { width: 95%; height: 90%; padding: 16px; max-width: none; }
             textarea { font-size: 14px; padding: 12px; }
             
-            .mode-mobile { border-width: 10px; width: 100%; max-width: 375px; height: 750px; }
+            /* 실제 폰에서 볼 때는 다시 border-box로 맞춰줌 (화면 넘침 방지) */
+            .mode-mobile { 
+                box-sizing: border-box; 
+                border-width: 8px; 
+                width: 100%; 
+                max-width: 400px; 
+                height: 750px; 
+            }
         }
     </style>
 </head>
@@ -266,21 +277,14 @@
         const charCountEl = document.getElementById('charCount');
         let currentBlobUrl = null;
 
-        // [핵심] 모바일 키보드 내려갈 때 스크롤 복구
+        // 모바일 키보드 대응: 스크롤 리셋
         function resetScroll() {
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
         }
-
-        // 인풋창 포커스 아웃 시 강제 스크롤 리셋
         window.addEventListener('blur', resetScroll);
         window.addEventListener('focusout', resetScroll);
-        
-        // 화면 리사이즈(키보드 등) 시 스크롤 리셋
-        window.addEventListener('resize', () => {
-             // 약간의 딜레이 후 실행 (키보드 애니메이션 종료 대기)
-             setTimeout(resetScroll, 100);
-        });
+        window.addEventListener('resize', () => { setTimeout(resetScroll, 100); });
 
         function updateCharCount(text) {
             charCountEl.innerText = text.length.toLocaleString() + '자';
@@ -327,7 +331,7 @@
         function toggleEditor() {
             if (overlay.classList.contains('open')) {
                 overlay.classList.remove('open');
-                resetScroll(); // 닫을 때 스크롤 복구
+                resetScroll(); 
             } else {
                 overlay.classList.add('open');
                 codeInput.focus();
@@ -350,7 +354,6 @@
             if (frame.contentWindow) frame.contentWindow.location.reload();
         }
         
-        // 초기 로드 시 스크롤 고정
         resetScroll();
     </script>
 </body>
