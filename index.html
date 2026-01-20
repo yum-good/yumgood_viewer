@@ -19,7 +19,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* 아이폰 사파리 튕김 방지 (고정) */
+        /* [아이폰 사파리 튕김 방지] */
         html, body { 
             position: fixed; 
             width: 100%; height: 100%; 
@@ -31,7 +31,6 @@
             touch-action: none; 
         }
         
-        /* === 헤더 === */
         header {
             background-color: var(--header-bg); height: 60px; padding: 0 20px;
             border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
@@ -65,7 +64,7 @@
             display: flex; width: 100%; height: calc(100% - 60px); position: relative;
         }
 
-        /* 1. 에디터 패널 */
+        /* 에디터 패널 */
         #editor-panel {
             width: 0; 
             display: flex; flex-direction: column; 
@@ -90,7 +89,7 @@
             overflow-y: auto; touch-action: pan-y; 
         }
 
-        /* 2. 프리뷰 영역 */
+        /* 프리뷰 영역 */
         main {
             flex: 1; position: relative; overflow: hidden; 
             display: flex; flex-direction: column; background-color: #121212;
@@ -104,13 +103,14 @@
             padding: 40px; 
             transition: padding 0.3s ease;
             overflow-x: hidden; 
-            touch-action: pan-x pan-y; 
+            touch-action: pan-x pan-y;
             -webkit-overflow-scrolling: touch;
         }
         .editor-open-mode .scroll-area { padding: 10px; }
 
         #scale-wrapper {
-            transform-origin: top center; transition: transform 0.2s ease-out; margin-bottom: 100px;
+            transform-origin: top center; transition: transform 0.2s ease-out; 
+            /* 하단 여백은 JS에서 동적으로 제어합니다 */
         }
 
         .iframe-container {
@@ -124,38 +124,26 @@
         .mode-pc { width: 1050px; height: 900px; }
         .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 40px; }
 
-        /* [수정: 상단 이동 + 반투명 효과] */
+        /* [슬라이드 토글 버튼] */
         #slide-toggle-btn {
             position: absolute; 
-            top: 80px; /* 헤더 아래쪽 상단으로 이동 */
+            top: 80px; 
             left: 10px; 
-            transform: translateY(0); /* 상단 기준이라 중앙 정렬 해제 */
+            transform: translateY(0); 
             width: 30px; height: 50px; 
-            
-            /* 반투명 배경 & 블러 효과 */
             background: rgba(40, 40, 40, 0.65); 
             backdrop-filter: blur(4px);
-            
             border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.2); /* 테두리도 은은하게 */
+            border: 1px solid rgba(255, 255, 255, 0.2); 
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-
             z-index: 60; cursor: pointer; color: #ccc; display: flex; align-items: center; justify-content: center;
             font-size: 10px;
             transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
         }
-        #slide-toggle-btn:hover { 
-            background: rgba(60, 60, 60, 0.8); 
-            color: #fff; 
-            border-color: rgba(255, 255, 255, 0.4); 
-        }
+        #slide-toggle-btn:hover { background: rgba(60, 60, 60, 0.8); color: #fff; border-color: rgba(255, 255, 255, 0.4); }
 
-        /* [PC] 패널이 열리면 버튼 이동 */
-        #editor-panel.open ~ #slide-toggle-btn { 
-            left: calc(40% - 15px); 
-        }
+        #editor-panel.open ~ #slide-toggle-btn { left: calc(40% - 15px); }
 
-        /* 모달 스타일 */
         .code-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center;
@@ -179,7 +167,6 @@
             }
             .controls::-webkit-scrollbar { display: none; }
 
-            /* 에디터 패널 (Overlay) */
             #editor-panel { 
                 position: absolute; top: 0; left: 0; height: 100%; 
                 width: 0; min-width: 0; 
@@ -189,20 +176,14 @@
             }
             #editor-panel.open { width: 85%; } 
 
-            #slide-toggle-btn { 
-                left: 10px; 
-                display: flex !important;
-            }
-            
-            #editor-panel.open ~ #slide-toggle-btn { 
-                left: calc(85% - 15px); 
-            } 
+            #slide-toggle-btn { left: 10px; display: flex !important; }
+            #editor-panel.open ~ #slide-toggle-btn { left: calc(85% - 15px); } 
 
             .editor-modal { width: 90%; height: 90%; }
         }
     </style>
 </head>
-<body class="editor-open-mode"> 
+<body> 
 
     <header>
         <div class="brand">YUMGOOD</div>
@@ -217,7 +198,7 @@
     </header>
 
     <div id="app-container">
-        <div id="editor-panel" class="open">
+        <div id="editor-panel">
             <div class="editor-toolbar">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span>LIVE EDITOR</span>
@@ -274,6 +255,17 @@
         let currentCode = "";
         let debounceTimer;
 
+        // iOS 스크롤 튕김 방지
+        document.addEventListener('touchmove', function(e) {
+            if (e.target.closest('#live-editor') || 
+                e.target.closest('.modal-ta') || 
+                e.target.closest('.controls') ||
+                e.target.closest('.scroll-area')) {
+                return; 
+            }
+            e.preventDefault();
+        }, { passive: false });
+
         // === 1. 에디터 토글 ===
         function toggleEditor() {
             const isOpen = editorPanel.classList.toggle('open');
@@ -302,7 +294,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 setCode(e.target.result);
-                if(!editorPanel.classList.contains('open')) toggleEditor();
+                // [수정] 자동 열림 방지 (코드 삭제함)
                 event.target.value = ''; 
             };
             reader.readAsText(file, 'UTF-8');
@@ -319,7 +311,7 @@
         function applyModalCode() {
             setCode(modalInput.value);
             closePasteModal();
-            if(!editorPanel.classList.contains('open')) toggleEditor();
+            // [수정] 자동 열림 방지 (코드 삭제함)
         }
 
         function copyEditor() {
@@ -344,7 +336,7 @@
             frame.src = currentBlobUrl;
         }
 
-        // === 4. 화면 배율 자동 조정 ===
+        // === 4. 화면 배율 자동 조정 (여백 계산 핵심 로직) ===
         function fitToScreen() {
             if (currentMode === 'mobile') {
                 const requiredWidth = 375 + 40; 
@@ -356,10 +348,13 @@
                 } else {
                     scaleWrapper.style.transform = 'scale(1)';
                 }
+                
+                // 모바일 모드는 스크롤 문제가 없으므로 기본 여백만 적용
+                scaleWrapper.style.marginBottom = '100px'; 
                 return;
             }
 
-            // PC 모드 로직
+            // [PC 모드]
             const targetWidth = 1080; 
             let availableWidth = scrollArea.clientWidth; 
 
@@ -371,6 +366,14 @@
             if (scale < 0.2) scale = 0.2;
             
             scaleWrapper.style.transform = `scale(${scale})`;
+
+            // [수정] 불필요한 하단 여백 제거 로직
+            // 스케일로 줄어든 만큼 실제 차지하는 높이도 줄어들도록 마이너스 마진 계산
+            const h = wrapper.offsetHeight; 
+            const buffer = isMobileScreen ? '20vh' : '100px'; // 모바일은 20vh, PC는 100px
+            const negativeMargin = h * (1 - scale);
+            
+            scaleWrapper.style.marginBottom = `calc(-${negativeMargin}px + ${buffer})`;
         }
 
         window.addEventListener('resize', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(fitToScreen, 100); });
@@ -389,6 +392,8 @@
 
         function refreshFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); }
 
+        // 초기화: 버튼 라벨을 ▶로 맞춤
+        toggleBtn.innerText = "▶";
         fitToScreen();
     </script>
 </body>
