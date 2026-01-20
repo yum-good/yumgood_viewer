@@ -6,271 +6,295 @@
     <title>YUMGOOD Simple Viewer</title>
     <style>
         :root {
-            --bg-gradient-start: #353535;
-            --bg-gradient-end: #555555;
-            --header-bg: #252525;
-            --border-color: #444;
+            --bg-color: #121212;
+            --header-bg: #1e1e1e;
+            --border-color: #333;
             --text-color: #e0e0e0;
+            --accent-color: #eee;
+            --panel-bg: #1a1a1a;
             --btn-border: #555;
-            --btn-hover-bg: #444;
+            --btn-hover: #444;
             --btn-active-bg: #eee;
             --btn-active-text: #000;
-            --frame-border: #1a1a1a; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        html, body {
-            width: 100%; height: 100dvh;
-            margin: 0; padding: 0;
-            overflow: hidden; 
-            overscroll-behavior: none;
-            position: fixed;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", Roboto, sans-serif;
-            background-color: #333;
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-        }
-
+        html, body { width: 100%; height: 100dvh; margin: 0; overflow: hidden; background: var(--bg-color); font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; color: var(--text-color); }
+        
         /* === 헤더 === */
         header {
-            background-color: var(--header-bg);
-            height: 60px;
-            padding: 0 16px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            z-index: 100;
-            gap: 10px;
+            background-color: var(--header-bg); height: 60px; padding: 0 20px;
+            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; z-index: 100;
         }
 
-        .brand { 
-            font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
-            display: flex; align-items: center; gap: 8px; white-space: nowrap;
+        .brand { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-right: 20px; }
+        
+        /* 탭 스위치 디자인 */
+        .tab-switch {
+            display: flex; background: #111; padding: 4px; border-radius: 8px; border: 1px solid #333; margin-right: auto;
         }
-        .brand span { 
-            font-size: 10px; color: #aaa; font-weight: 500; 
-            border: 1px solid #555; padding: 2px 6px; border-radius: 6px; 
+        .tab-btn {
+            background: transparent; border: none; color: #888; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: 0.2s;
         }
+        .tab-btn.active { background: #333; color: #fff; }
 
-        .controls { 
-            display: flex; gap: 8px; align-items: center; 
-            overflow-x: auto; padding-right: 10px;
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
-        .controls::-webkit-scrollbar { display: none; }
-
+        .controls { display: flex; gap: 8px; align-items: center; }
+        
         .btn {
             background: transparent; color: #aaa; border: 1px solid var(--btn-border);
-            padding: 0 14px; height: 36px; font-size: 13px; border-radius: 18px; 
-            cursor: pointer; transition: all 0.2s ease; font-weight: 600;
-            display: flex; align-items: center; justify-content: center;
-            white-space: nowrap; flex-shrink: 0;
+            padding: 0 14px; height: 34px; font-size: 12px; border-radius: 17px; 
+            cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; white-space: nowrap;
         }
-        .btn:hover { background: var(--btn-hover-bg); color: #fff; border-color: #666; }
-        .btn:active { transform: scale(0.96); }
-        .btn.active { 
-            background: var(--btn-active-bg); color: var(--btn-active-text); 
-            border-color: var(--btn-active-bg); font-weight: 800; 
-            box-shadow: 0 2px 10px rgba(255,255,255,0.2);
+        .btn:hover { background: var(--btn-hover); color: #fff; border-color: #777; }
+        .btn.active { background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg); font-weight: 800; }
+        label.btn { display: inline-flex; margin: 0; }
+        input[type="file"] { display: none; }
+        .divider { width: 1px; height: 16px; background: #444; margin: 0 4px; }
+
+        /* 미니 버튼 (에디터 툴바용) */
+        .mini-btn {
+            background: #333; border: 1px solid #555; color: #ccc; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; transition: 0.2s;
+        }
+        .mini-btn:hover { background: #555; color: #fff; }
+        .mini-btn.danger { color: #ff6b6b; border-color: #ff6b6b; background: transparent; }
+        .mini-btn.danger:hover { background: #ff6b6b; color: #fff; }
+
+        /* === 메인 레이아웃 === */
+        #app-container {
+            display: flex; width: 100%; height: calc(100dvh - 60px); position: relative;
+        }
+
+        /* 1. 에디터 패널 (왼쪽) - 에디터 모드일 때만 보임 */
+        #editor-panel {
+            width: 0; overflow: hidden; display: flex; flex-direction: column; 
+            background: var(--panel-bg); border-right: 1px solid var(--border-color);
+            transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #editor-panel.open { width: 40%; min-width: 320px; } /* 열렸을 때 너비 */
+
+        .editor-toolbar {
+            height: 40px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between;
+            background: #222; border-bottom: 1px solid #333; font-size: 12px; color: #888; font-weight: bold;
+        }
+        .editor-tools { display: flex; gap: 6px; }
+
+        textarea#live-editor {
+            flex: 1; width: 100%; background: #151515; color: #ccc; border: none; 
+            padding: 20px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; line-height: 1.6; resize: none;
+        }
+        textarea#live-editor:focus { outline: none; background: #181818; }
+
+        /* 2. 프리뷰 영역 (오른쪽) */
+        main {
+            flex: 1; position: relative; overflow: hidden; 
+            display: flex; flex-direction: column; background-color: #121212;
+            background-image: radial-gradient(#252525 1px, transparent 1px); background-size: 24px 24px;
         }
         
-        label.btn { display: inline-flex; margin-bottom: 0; }
-        .divider { width: 1px; height: 16px; background: #555; margin: 0 6px; flex-shrink: 0; }
-        input[type="file"] { display: none; }
-
-        /* === 메인 영역 === */
-        main {
-            flex: 1;
-            position: relative;
-            overflow: auto; 
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px;
-            
-            background-image: 
-                radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            background-size: 24px 24px, 100% 100%;
-            background-attachment: local, fixed;
+        /* 스크롤 가능한 영역 */
+        .scroll-area {
+            flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 40px;
         }
 
-        /* 스케일 래퍼 */
+        /* 뷰어 컨테이너 (Scale 대상) */
         #scale-wrapper {
-            transform-origin: top center;
-            transition: transform 0.2s ease-out;
-            margin-bottom: 100px;
+            transform-origin: top center; transition: transform 0.2s ease-out; margin-bottom: 100px;
         }
 
         .iframe-container {
-            background: #121212; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-            overflow: hidden;
-            
-            /* [수정됨] content-box 사용: 테두리(12px)가 내부 크기(1050px)를 침범하지 않도록 함 */
+            background: #121212; overflow: hidden; 
+            border: 12px solid var(--panel-bg); border-radius: 20px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
             box-sizing: content-box; 
-            border: 12px solid var(--frame-border);
-            border-radius: 20px;
-            opacity: 1; 
         }
+        iframe { width: 100%; height: 100%; border: none; background: #121212; display: block; }
 
-        /* 아이프레임 정렬 보정 */
-        iframe { 
-            width: 100%; height: 100%; border: none; background: #121212; 
-            display: block; vertical-align: top; /* 상단 여백 제거 */
-        }
+        /* PC모드 고정 사이즈 */
+        .mode-pc { width: 1050px; height: 900px; }
+        /* 모바일모드 고정 사이즈 */
+        .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 40px; }
 
-        /* === 뷰 모드 설정 === */
-        
-        /* [수정됨] PC 모드: 1050px x 591px (16:9 비율) */
-        .mode-pc {
-            width: 1050px; 
-            height: 591px; /* 1050 * 9 / 16 = 590.625 */
-        }
-
-        /* [수정됨] 모바일 모드: 아이폰 비율 */
-        .mode-mobile { 
-            /* 모바일도 content-box 적용하여 테두리 간섭 방지 */
-            box-sizing: content-box; 
-            width: 375px; 
-            height: 812px; 
-            border-width: 14px; 
-            border-radius: 40px;
-            box-shadow: 0 0 0 2px #333, 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        /* === 모달 === */
+        /* === 기존 모달 (코드 붙여넣기용) === */
         .code-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(5px);
-            z-index: 200;
-            display: none; justify-content: center; align-items: center;
-            touch-action: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center;
         }
-        .code-overlay.open { display: flex; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .code-overlay.open { display: flex; }
+        .editor-modal { width: 700px; height: 80%; background: #222; border: 1px solid #444; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .modal-ta { flex: 1; background: #111; border: 1px solid #333; color: #ccc; padding: 15px; border-radius: 8px; resize: none; margin-bottom: 15px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
-        .editor-modal {
-            width: 700px; max-width: 90%; height: 75%;
-            background: #222; border: 1px solid #444; border-radius: 24px; padding: 24px;
-            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; color: #fff; font-size: 16px; font-weight: 700; }
-        .char-badge { font-size: 11px; font-weight: 500; color: #aaa; background: #333; padding: 4px 10px; border-radius: 12px; border: 1px solid #444; }
-        textarea {
-            flex: 1; background: #1a1a1a; border: 1px solid #333; color: #ccc;
-            font-family: "Consolas", "Monaco", monospace; font-size: 13px; line-height: 1.6;
-            padding: 18px; border-radius: 12px; resize: none;
-        }
-        textarea:focus { border-color: #666; background: #151515; }
-        .editor-actions { margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
-        .editor-actions .btn { border-radius: 12px; height: 44px; font-size: 14px; padding: 0 20px; }
-        .btn-run { background: #fff; color: #000; border: none; font-weight: 800; }
-        .btn-close { border: 1px solid #555; color: #aaa; }
-        .btn-clear { margin-right: auto; border: 1px solid #843b3b; color: #ff6b6b; }
-        .btn-clear:hover { background: #843b3b; color: #fff; }
-
+        /* 모바일 반응형 */
         @media (max-width: 768px) {
-            header { padding: 0 12px; } .brand span { display: none; }
-            .controls { flex: 1; margin-left: 10px; padding-right: 0; justify-content: flex-start; }
-            main { padding: 20px 10px 150px 10px; }
-            .editor-modal { width: 95%; height: 90%; padding: 16px; max-width: none; }
-            textarea { font-size: 14px; padding: 12px; }
-            /* 모바일에서 볼 때 반응형 처리 */
-            .mode-mobile { box-sizing: border-box; border-width: 8px; width: 100%; max-width: 400px; height: 750px; }
+            .brand span { display: none; }
+            #editor-panel.open { width: 100%; position: absolute; height: 100%; z-index: 50; } 
+            .controls { display: none; } 
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand">YUMGOOD <span>PREVIEW</span></div>
+        <div class="brand">YUMGOOD</div>
+        
+        <div class="tab-switch">
+            <button class="tab-btn active" onclick="switchTab('viewer')">뷰어 모드</button>
+            <button class="tab-btn" onclick="switchTab('editor')">에디터 모드</button>
+        </div>
+
         <div class="controls">
             <button class="btn active" onclick="setView(this, 'pc')">PC Full</button>
             <button class="btn" onclick="setView(this, 'mobile')">Mobile</button>
             <div class="divider"></div>
-            <label class="btn">HTML 불러오기 <input type="file" accept=".html" onchange="loadFile(event)"></label>
-            <button class="btn" onclick="toggleEditor()">코드 붙여넣기</button>
+            <label class="btn">파일 열기 <input type="file" accept=".html" onchange="loadFile(event)"></label>
+            <button class="btn" onclick="openPasteModal()">코드 붙여넣기</button>
             <button class="btn" onclick="refreshFrame()">새로고침</button>
         </div>
     </header>
 
+    <div id="app-container">
+        <div id="editor-panel">
+            <div class="editor-toolbar">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span>HTML LIVE EDITOR</span>
+                    <span id="editor-char-count" style="font-weight:400; font-size:11px; color:#666;">0자</span>
+                </div>
+                <div class="editor-tools">
+                    <button class="mini-btn" onclick="copyEditor()">전체복사</button>
+                    <button class="mini-btn danger" onclick="clearEditor()">전체삭제</button>
+                </div>
+            </div>
+            <textarea id="live-editor" placeholder="여기에 코드를 입력하면 우측 미리보기에 실시간 반영됩니다." spellcheck="false"></textarea>
+        </div>
+
+        <main>
+            <div class="scroll-area">
+                <div id="scale-wrapper">
+                    <div id="wrapper" class="iframe-container mode-pc">
+                        <iframe id="previewFrame"></iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <div id="codeOverlay" class="code-overlay">
         <div class="editor-modal">
-            <div class="editor-header">
-                <span>HTML 코드 입력</span>
-                <span id="charCount" class="char-badge">0자</span>
+            <div class="modal-header">
+                <div style="color:#fff; font-weight:bold;">코드 붙여넣기</div>
+                <button class="mini-btn danger" onclick="clearModalInput()">내용 비우기</button>
             </div>
-            <textarea id="codeInput"></textarea>
-            <div class="editor-actions">
-                <button class="btn btn-clear" onclick="clearCode()">전체삭제</button>
-                <button class="btn btn-close" onclick="toggleEditor()">닫기</button>
-                <button class="btn btn-run" onclick="runCode()">실행</button>
+            
+            <textarea id="modalInput" class="modal-ta" placeholder="HTML 코드를 붙여넣으세요..."></textarea>
+            
+            <div class="modal-actions">
+                <button class="btn" onclick="closePasteModal()">닫기</button>
+                <button class="btn" style="background:#eee; color:#000;" onclick="applyModalCode()">적용</button>
             </div>
         </div>
     </div>
-
-    <main id="main-area">
-        <div id="scale-wrapper">
-            <div id="wrapper" class="iframe-container mode-pc">
-                <iframe id="previewFrame"></iframe>
-            </div>
-        </div>
-    </main>
 
     <script>
         const frame = document.getElementById('previewFrame');
         const wrapper = document.getElementById('wrapper');
         const scaleWrapper = document.getElementById('scale-wrapper');
-        const mainArea = document.getElementById('main-area');
-        const overlay = document.getElementById('codeOverlay');
-        const codeInput = document.getElementById('codeInput');
-        const charCountEl = document.getElementById('charCount');
+        const liveEditor = document.getElementById('live-editor');
+        const modalOverlay = document.getElementById('codeOverlay');
+        const modalInput = document.getElementById('modalInput');
+        const editorPanel = document.getElementById('editor-panel');
+        const scrollArea = document.querySelector('.scroll-area');
         
         let currentBlobUrl = null;
-        let currentMode = 'pc';
+        let currentMode = 'pc'; // pc | mobile
+        let currentCode = "";
+        let debounceTimer;
 
-        function fitToScreen() {
-            if (currentMode !== 'pc') {
-                scaleWrapper.style.transform = 'scale(1)';
-                wrapper.style.height = '812px'; 
-                return;
+        // === 1. 탭 전환 기능 ===
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(tabName === 'viewer' ? '뷰어' : '에디터'));
+            });
+
+            if (tabName === 'editor') {
+                editorPanel.classList.add('open');
+                if(!liveEditor.value && currentCode) liveEditor.value = currentCode;
+            } else {
+                editorPanel.classList.remove('open');
             }
-            // PC모드: 너비 1050 + 테두리 24 = 1074px 기준 스케일링
-            const targetWidth = 1074; 
-            const availableWidth = mainArea.clientWidth - 40; 
-            let scale = availableWidth < targetWidth ? availableWidth / targetWidth : 1;
-            if(window.innerWidth < 768) scale = scale * 0.95;
-            scaleWrapper.style.transform = `scale(${scale})`;
+            setTimeout(fitToScreen, 350);
         }
 
-        window.addEventListener('resize', fitToScreen);
+        // === 2. 실시간 에디터 로직 ===
+        liveEditor.addEventListener('input', function() {
+            const code = this.value;
+            currentCode = code;
+            document.getElementById('editor-char-count').innerText = code.length.toLocaleString() + "자";
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                updatePreview(code);
+            }, 300);
+        });
 
+        // === 3. 파일/코드 로드 공통 처리 ===
         function loadFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const content = e.target.result;
-                updatePreview(content);
-                codeInput.value = content;
-                updateCharCount(content);
+                setCode(e.target.result);
+                // 파일 열기 후 에디터 탭으로 자동 이동 (편의성)
+                switchTab('editor'); 
+                event.target.value = ''; // 같은 파일 다시 열기 위해 초기화
             };
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
         }
 
-        function runCode() {
-            const code = codeInput.value;
+        // === 4. 모달 관련 및 버튼 기능들 ===
+        function openPasteModal() {
+            modalOverlay.classList.add('open');
+            modalInput.value = currentCode; 
+            modalInput.focus();
+        }
+        function closePasteModal() { modalOverlay.classList.remove('open'); }
+        
+        // [추가] 모달 내용 비우기
+        function clearModalInput() {
+            modalInput.value = '';
+            modalInput.focus();
+        }
+
+        function applyModalCode() {
+            const code = modalInput.value;
+            setCode(code);
+            closePasteModal();
+            switchTab('editor'); // 적용 후 에디터 모드 확인
+        }
+
+        // [추가] 에디터 전체 복사
+        function copyEditor() {
+            if (!liveEditor.value) return;
+            navigator.clipboard.writeText(liveEditor.value).then(() => {
+                alert('코드가 복사되었습니다.');
+            });
+        }
+
+        // [추가] 에디터 전체 삭제
+        function clearEditor() {
+            if(confirm('정말 내용을 모두 지우시겠습니까?')) {
+                setCode('');
+            }
+        }
+
+        // 모든 코드 변경 통합
+        function setCode(code) {
+            currentCode = code;
+            liveEditor.value = code;
+            document.getElementById('editor-char-count').innerText = code.length.toLocaleString() + "자";
             updatePreview(code);
-            toggleEditor();
         }
 
         function updatePreview(htmlContent) {
@@ -279,6 +303,23 @@
             currentBlobUrl = URL.createObjectURL(blob);
             frame.src = currentBlobUrl;
         }
+
+        // === 5. 화면 배율 자동 조정 ===
+        function fitToScreen() {
+            if (currentMode !== 'pc') {
+                scaleWrapper.style.transform = 'scale(1)';
+                return;
+            }
+            const targetWidth = 1080; 
+            const availableWidth = scrollArea.clientWidth - 60; 
+
+            let scale = availableWidth < targetWidth ? availableWidth / targetWidth : 1;
+            if (scale < 0.2) scale = 0.2;
+            
+            scaleWrapper.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('resize', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(fitToScreen, 100); });
 
         function setView(btn, mode) {
             document.querySelectorAll('.controls .btn').forEach(b => {
@@ -290,25 +331,13 @@
             wrapper.className = 'iframe-container';
             wrapper.classList.add('mode-' + mode);
             
-            if(mode === 'mobile') {
+            if (mode === 'mobile') {
                 scaleWrapper.style.transform = 'scale(1)';
             } else {
                 fitToScreen();
             }
         }
 
-        function updateCharCount(text) { charCountEl.innerText = text.length.toLocaleString() + '자'; }
-        codeInput.addEventListener('input', function() { updateCharCount(this.value); });
-        
-        function clearCode() {
-            if(confirm("입력된 코드를 전부 삭제하시겠습니까?")) {
-                codeInput.value = ""; updateCharCount(""); codeInput.focus();
-            }
-        }
-        function toggleEditor() {
-            if (overlay.classList.contains('open')) { overlay.classList.remove('open'); } 
-            else { overlay.classList.add('open'); codeInput.focus(); updateCharCount(codeInput.value); }
-        }
         function refreshFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); }
 
         fitToScreen();
