@@ -19,7 +19,7 @@
             --btn-active-bg: #eee;
             --btn-active-text: #000;
 
-            --frame-border: #1a1a1a; /* 뷰어 테두리 색 (진한 색) */
+            --frame-border: #1a1a1a; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -58,7 +58,7 @@
 
         .controls { display: flex; gap: 8px; align-items: center; }
 
-        /* 버튼 스타일 (더 둥글게 변경) */
+        /* 버튼 스타일 */
         .btn {
             background: transparent;
             color: #aaa;
@@ -66,7 +66,7 @@
             padding: 0 16px;
             height: 34px;
             font-size: 13px;
-            border-radius: 17px; /* 둥글둥글한 알약 모양 (Pill Shape) */
+            border-radius: 17px; 
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 600;
@@ -85,71 +85,46 @@
         .divider { width: 1px; height: 16px; background: #555; margin: 0 6px; }
         input[type="file"] { display: none; }
 
-        /* === 메인 영역 (배경 밝게 & 디자인) === */
+        /* === 메인 영역 === */
         main {
             flex: 1;
             position: relative;
             overflow: auto;
-            
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* 상단 정렬 (잘림 방지) */
+            align-items: flex-start;
             padding: 40px;
-            
-            /* 밝아진 그라데이션 + 도트 패턴 */
             background-image: 
                 radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
                 linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            
             background-size: 24px 24px, 100% 100%;
             background-attachment: local, fixed;
         }
 
-        /* 아이프레임 컨테이너 (공통 테두리 스타일) */
+        /* 아이프레임 컨테이너 */
         .iframe-container {
             background: #fff;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* 부드러운 애니메이션 */
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4); /* 그림자 강화 */
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
             overflow: hidden;
             margin: auto;
             flex-shrink: 0;
-
-            /* 핵심: 모든 뷰에서 둥근 테두리 적용 */
             border: 12px solid var(--frame-border);
-            border-radius: 20px; /* 모서리 둥글게 */
+            border-radius: 20px;
         }
 
         iframe { width: 100%; height: 100%; border: none; background: #fff; display: block; }
 
-        /* 뷰 모드 사이즈 정의 */
-        
-        /* PC Full: 이제 꽉 차지 않고, 화면보다 조금 작게 떠있는 창처럼 보임 */
-        .mode-pc { 
-            width: 95%; 
-            height: 95%; 
-            max-width: 1600px;
-            border-radius: 20px; /* PC뷰도 둥글게 */
-        } 
-        
-        .mode-desktop { 
-            width: 1280px; 
-            height: 800px; 
-            border-radius: 20px; 
-        }
-        
-        /* 모바일: 테두리를 조금 더 두껍게 줘서 폰 느낌 내기 */
-        .mode-mobile { 
-            width: 375px; 
-            height: 812px; 
-            border-width: 14px; /* 조금 더 두꺼운 베젤 */
-            border-radius: 36px; /* 더 둥근 모서리 */
-        }
+        /* 뷰 모드 사이즈 */
+        .mode-pc { width: 95%; height: 95%; max-width: 1600px; border-radius: 20px; } 
+        .mode-desktop { width: 1280px; height: 800px; border-radius: 20px; }
+        .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 36px; }
 
-        /* === 코드 입력 모달 (둥글게) === */
+        /* === 코드 입력 모달 === */
         .code-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px); /* 블러 효과 강화 */
+            backdrop-filter: blur(8px);
             z-index: 100;
             display: none;
             justify-content: center;
@@ -163,14 +138,29 @@
             width: 700px; max-width: 90%; height: 75%;
             background: #222;
             border: 1px solid #444;
-            border-radius: 24px; /* 모달도 둥글게 */
+            border-radius: 24px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .editor-header { display: flex; justify-content: space-between; margin-bottom: 16px; color: #fff; font-size: 16px; font-weight: 700; }
+        .editor-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 16px; color: #fff; font-size: 16px; font-weight: 700; 
+        }
+
+        /* 글자수 배지 스타일 */
+        .char-badge {
+            font-size: 11px;
+            font-weight: 500;
+            color: #888;
+            background: #333;
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid #444;
+            letter-spacing: 0.5px;
+        }
         
         textarea {
             flex: 1;
@@ -181,7 +171,7 @@
             font-size: 13px;
             line-height: 1.6;
             padding: 18px;
-            border-radius: 12px; /* 입력창 내부도 둥글게 */
+            border-radius: 12px;
             resize: none;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
         }
@@ -189,7 +179,6 @@
 
         .editor-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
         
-        /* 모달 버튼들 */
         .editor-actions .btn { border-radius: 12px; height: 40px; font-size: 14px; }
         .btn-run { background: #fff; color: #000; border: none; font-weight: 800; }
         .btn-run:hover { background: #ddd; }
@@ -227,6 +216,7 @@
         <div class="editor-modal">
             <div class="editor-header">
                 <span>HTML 코드 입력</span>
+                <span id="charCount" class="char-badge">0자</span>
             </div>
             <textarea id="codeInput" placeholder="여기에 index.html 전체 코드를 붙여넣으세요..."></textarea>
             <div class="editor-actions">
@@ -247,15 +237,29 @@
         const wrapper = document.getElementById('wrapper');
         const overlay = document.getElementById('codeOverlay');
         const codeInput = document.getElementById('codeInput');
+        const charCountEl = document.getElementById('charCount');
         let currentBlobUrl = null;
+
+        // 글자수 업데이트 함수
+        function updateCharCount(text) {
+            const length = text.length;
+            charCountEl.innerText = length.toLocaleString() + '자'; // 천단위 콤마 추가
+        }
+
+        // 텍스트 입력 시 실시간 업데이트
+        codeInput.addEventListener('input', function() {
+            updateCharCount(this.value);
+        });
 
         function loadFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                updatePreview(e.target.result);
-                codeInput.value = e.target.result;
+                const content = e.target.result;
+                updatePreview(content);
+                codeInput.value = content;
+                updateCharCount(content); // 파일 로드 시 글자수 갱신
             };
             reader.readAsText(file);
         }
@@ -283,12 +287,13 @@
             } else {
                 overlay.classList.add('open');
                 codeInput.focus();
+                // 창 열 때 글자수 한 번 더 체크
+                updateCharCount(codeInput.value);
             }
         }
 
         function setView(btn, mode) {
             document.querySelectorAll('.controls .btn').forEach(b => {
-                // 뷰 모드 버튼만 active 해제
                 if(['PC Full', '1280px', 'Mobile'].includes(b.innerText)) {
                     b.classList.remove('active');
                 }
