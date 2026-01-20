@@ -2,36 +2,42 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>YUMGOOD Simple Viewer</title>
     <style>
         :root {
-            /* 컬러 팔레트 */
             --bg-gradient-start: #353535;
             --bg-gradient-end: #555555;
-            
             --header-bg: #252525;
             --border-color: #444;
             --text-color: #e0e0e0;
-            
             --btn-border: #555;
             --btn-hover-bg: #444;
             --btn-active-bg: #eee;
             --btn-active-text: #000;
-
             --frame-border: #1a1a1a; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
+        html, body {
+            width: 100%;
+            /* 100vh 대신 100dvh 사용 (모바일 주소창 대응) */
+            height: 100dvh; 
+            margin: 0; padding: 0;
+            overflow: hidden; /* body 자체 스크롤 막음 (main에서 처리) */
+            
+            /* 핵심: 화면 전체가 튕겨 올라가는 것 방지 */
+            overscroll-behavior: none; 
+            position: fixed; /* 화면 고정 */
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", Roboto, sans-serif;
             background-color: #333;
             color: var(--text-color);
-            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         /* === 헤더 디자인 === */
@@ -67,7 +73,6 @@
         }
         .controls::-webkit-scrollbar { display: none; }
 
-        /* 버튼 스타일 */
         .btn {
             background: transparent;
             color: #aaa;
@@ -102,13 +107,17 @@
         main {
             flex: 1;
             position: relative;
-            overflow: auto; /* 화면 자체 스크롤 */
+            
+            /* 메인 영역에서만 스크롤 허용 */
+            overflow-y: auto; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 (iOS) */
+            
             display: flex;
             justify-content: center;
             align-items: flex-start;
             
-            /* 패딩 유지 */
-            padding: 40px 40px 120px 40px;
+            padding: 40px 40px 150px 40px; /* 하단 여백 넉넉히 */
             
             background-image: 
                 radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
@@ -117,7 +126,6 @@
             background-attachment: local, fixed;
         }
 
-        /* 아이프레임 컨테이너 */
         .iframe-container {
             background: #fff;
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
@@ -128,11 +136,13 @@
             border: 12px solid var(--frame-border);
             border-radius: 20px;
             max-width: 100%;
+            
+            /* iframe 내부 스크롤 문제 방지 */
+            transform: translateZ(0); 
         }
 
         iframe { width: 100%; height: 100%; border: none; background: #fff; display: block; }
 
-        /* 뷰 모드 사이즈 */
         .mode-pc { width: 95%; height: 95%; max-width: 1600px; } 
         .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 36px; }
 
@@ -145,6 +155,9 @@
             display: none;
             justify-content: center;
             align-items: center;
+            
+            /* 모달 띄웠을 때 뒤쪽 스크롤 방지 */
+            touch-action: none;
         }
         .code-overlay.open { display: flex; animation: fadeIn 0.2s ease-out; }
 
@@ -190,40 +203,20 @@
         .editor-actions { margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
         .editor-actions .btn { border-radius: 12px; height: 44px; font-size: 14px; padding: 0 20px; }
         
-        /* 버튼 컬러 */
         .btn-run { background: #fff; color: #000; border: none; font-weight: 800; }
         .btn-close { border: 1px solid #555; color: #aaa; }
+        .btn-clear { margin-right: auto; border: 1px solid #843b3b; color: #ff6b6b; }
+        .btn-clear:hover { background: #843b3b; color: #fff; }
 
-        /* 삭제 버튼 (빨간색 계열) */
-        .btn-clear {
-            margin-right: auto; /* 왼쪽 구석으로 밀기 */
-            border: 1px solid #843b3b;
-            color: #ff6b6b;
-        }
-        .btn-clear:hover {
-            background: #843b3b;
-            color: #fff;
-        }
-
-        /* === 📱 모바일 전용 미디어 쿼리 === */
         @media (max-width: 768px) {
             header { padding: 0 12px; }
             .brand span { display: none; }
             
-            .controls { 
-                flex: 1; 
-                margin-left: 10px; 
-                padding-right: 0;
-                justify-content: flex-start;
-            }
+            .controls { flex: 1; margin-left: 10px; padding-right: 0; justify-content: flex-start; }
             
             main { padding: 20px 10px 150px 10px; }
 
-            .editor-modal { 
-                width: 95%; height: 90%; padding: 16px; 
-                max-width: none;
-            }
-            
+            .editor-modal { width: 95%; height: 90%; padding: 16px; max-width: none; }
             textarea { font-size: 14px; padding: 12px; }
             
             .mode-mobile { border-width: 10px; width: 100%; max-width: 375px; height: 750px; }
@@ -234,22 +227,12 @@
 
     <header>
         <div class="brand">YUMGOOD <span>PREVIEW</span></div>
-        
         <div class="controls">
             <button class="btn active" onclick="setView(this, 'pc')">PC Full</button>
             <button class="btn" onclick="setView(this, 'mobile')">Mobile</button>
-            
             <div class="divider"></div>
-
-            <label class="btn">
-                HTML 불러오기
-                <input type="file" accept=".html" onchange="loadFile(event)">
-            </label>
-            
-            <button class="btn" onclick="toggleEditor()">
-                코드 붙여넣기
-            </button>
-
+            <label class="btn">HTML 불러오기 <input type="file" accept=".html" onchange="loadFile(event)"></label>
+            <button class="btn" onclick="toggleEditor()">코드 붙여넣기</button>
             <button class="btn" onclick="refreshFrame()">새로고침</button>
         </div>
     </header>
@@ -283,6 +266,22 @@
         const charCountEl = document.getElementById('charCount');
         let currentBlobUrl = null;
 
+        // [핵심] 모바일 키보드 내려갈 때 스크롤 복구
+        function resetScroll() {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+        }
+
+        // 인풋창 포커스 아웃 시 강제 스크롤 리셋
+        window.addEventListener('blur', resetScroll);
+        window.addEventListener('focusout', resetScroll);
+        
+        // 화면 리사이즈(키보드 등) 시 스크롤 리셋
+        window.addEventListener('resize', () => {
+             // 약간의 딜레이 후 실행 (키보드 애니메이션 종료 대기)
+             setTimeout(resetScroll, 100);
+        });
+
         function updateCharCount(text) {
             charCountEl.innerText = text.length.toLocaleString() + '자';
         }
@@ -291,7 +290,6 @@
             updateCharCount(this.value);
         });
 
-        // 코드 전체 삭제 기능
         function clearCode() {
             if(confirm("입력된 코드를 전부 삭제하시겠습니까?")) {
                 codeInput.value = "";
@@ -315,7 +313,6 @@
 
         function runCode() {
             const code = codeInput.value;
-            // 빈 코드 실행 허용 (삭제 후 실행할 수도 있으므로)
             updatePreview(code);
             toggleEditor();
         }
@@ -330,6 +327,7 @@
         function toggleEditor() {
             if (overlay.classList.contains('open')) {
                 overlay.classList.remove('open');
+                resetScroll(); // 닫을 때 스크롤 복구
             } else {
                 overlay.classList.add('open');
                 codeInput.focus();
@@ -344,7 +342,6 @@
                 }
             });
             btn.classList.add('active');
-            
             wrapper.className = 'iframe-container';
             wrapper.classList.add('mode-' + mode);
         }
@@ -352,6 +349,9 @@
         function refreshFrame() {
             if (frame.contentWindow) frame.contentWindow.location.reload();
         }
+        
+        // 초기 로드 시 스크롤 고정
+        resetScroll();
     </script>
 </body>
 </html>
