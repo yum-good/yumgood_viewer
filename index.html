@@ -70,7 +70,7 @@
             background: var(--panel-bg); border-right: 1px solid var(--border-color);
             transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
             position: relative; z-index: 50;
-            overflow: hidden; /* 내용 넘침 방지 (필수) */
+            overflow: hidden; 
         }
         #editor-panel.open { width: 40%; min-width: 350px; } 
 
@@ -118,11 +118,11 @@
         .mode-pc { width: 1050px; height: 900px; }
         .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 40px; }
 
-        /* [버튼 스타일] */
+        /* [버튼 스타일 & 위치 수정] */
         #slide-toggle-btn {
             position: absolute; 
-            /* [요청 2] 위치를 살짝 위로 올림 (40%) */
-            top: 40%; 
+            /* [요청 2] 위치 상향 조정: 40% -> 30% */
+            top: 30%; 
             left: 0; 
             transform: translateY(-50%);
             width: 24px; height: 50px; background: #333; 
@@ -170,15 +170,15 @@
             }
             #editor-panel.open { width: 85%; } 
 
-            /* [요청 1] 모바일 버튼 위치 보정 */
+            /* [모바일 버튼 위치 보정] */
             #slide-toggle-btn { 
                 left: 0; 
                 display: flex !important;
             }
-            /* 패널이 85% 열리면 버튼도 85% 지점으로 정확히 이동 */
+            /* [요청 1] 패널이 85% 열리면 버튼도 85% 지점으로 정확히 이동 */
             #editor-panel.open ~ #slide-toggle-btn { 
                 left: 85%; 
-                /* 혹시 모를 1px 간격 방지용 미세 조정 */
+                /* 혹시 모를 겹침 방지를 위해 border-left를 살려줌 */
                 border-left: 1px solid #444; 
             } 
 
