@@ -2,759 +2,378 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1050, user-scalable=yes">
-    <title>YUMGOOD CARD MAKER v1.6.5 (PC View Only)</title>
-    
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/downloadjs/1.4.8/download.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YUMGOOD Simple Viewer</title>
     <style>
-        /* === [기본 UI] === */
-        * { box-sizing: border-box; }
+        :root {
+            --bg-color: #121212;
+            --header-bg: #1e1e1e;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --panel-bg: #1a1a1a;
+            --btn-border: #555;
+            --btn-hover: #444;
+            --btn-active-bg: #eee;
+            --btn-active-text: #000;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        html, body { 
+            width: 100%; height: 100dvh; margin: 0; 
+            overflow: hidden; 
+            background: var(--bg-color); 
+            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; 
+            color: var(--text-color);
+            overscroll-behavior: none; 
+            touch-action: pan-y; 
+        }
         
-        body { 
-            margin: 0; padding: 0; height: 100vh; 
-            background-color: #121212; color: #f0f0f0;
-            /* 폰트: 시스템 폰트 우선 (다운로드 깨짐 방지) */
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            
-            /* 핵심: PC 레이아웃 강제 유지 */
-            display: flex; 
-            min-width: 1050px; /* 컨트롤패널(440) + 미리보기영역(600) 확보 */
-            overflow: auto; /* 화면이 작으면 스크롤 생김 */
+        /* === 헤더 === */
+        header {
+            background-color: var(--header-bg); height: 60px; padding: 0 20px;
+            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; z-index: 100; position: relative;
         }
 
-        /* 왼쪽 패널 */
-        .control-panel {
-            width: 440px; min-width: 440px; padding: 30px; border-right: 1px solid #333;
-            overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
-            background: #121212; z-index: 100;
-            height: 100vh; /* 높이 고정 */
-        }
-        .control-panel::-webkit-scrollbar { width: 6px; }
-        .control-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
-        .main-title { font-size: 32px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -1px; }
-        .main-desc { font-size: 13px; color: #888; margin-bottom: 10px; }
-
-        .input-group { display: flex; flex-direction: column; gap: 6px; padding-bottom: 15px; border-bottom: 1px solid #222; }
-        .input-label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .brand { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-right: 20px; flex-shrink: 0; }
         
-        select, input[type="text"], input[type="color"] {
-            width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #333;
-            border-radius: 6px; color: #ddd; font-size: 13px; outline: none;
-            font-family: inherit;
+        .controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+        
+        .btn {
+            background: transparent; color: #aaa; border: 1px solid var(--btn-border);
+            padding: 0 14px; height: 34px; font-size: 12px; border-radius: 17px; 
+            cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; white-space: nowrap;
         }
-        select:focus, input[type="text"]:focus { border-color: #aaa; background: #262626; }
+        .btn:hover { background: var(--btn-hover); color: #fff; border-color: #777; }
+        .btn.active { background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg); font-weight: 800; }
+        label.btn { display: inline-flex; margin: 0; }
+        input[type="file"] { display: none; }
+        .divider { width: 1px; height: 16px; background: #444; margin: 0 4px; }
 
-        .color-picker-group { display: flex; gap: 5px; }
-        .color-picker-group input[type="color"] { width: 50px; padding: 0; border: none; cursor: pointer; height: 38px; }
-
-        .custom-row-inputs { display: flex; gap: 5px; background: #1a1a1a; padding: 5px; border-radius: 5px; border: 1px solid #333; }
-        .custom-row-inputs input { background: transparent; border: none; padding: 5px; }
-        .custom-row-inputs input.title { width: 35%; text-align: right; color: #aaa; font-weight: bold; border-right: 1px solid #444; border-radius: 0; }
-        .custom-row-inputs input.val { width: 65%; }
-
-        .file-upload-label {
-            display: block; padding: 12px; border: 1px dashed #555; border-radius: 8px;
-            text-align: center; cursor: pointer; color: #888; font-size: 12px; font-weight: bold;
-            background: #1a1a1a; transition: 0.3s;
+        .mini-btn {
+            background: #333; border: 1px solid #555; color: #ccc; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; transition: 0.2s;
         }
-        .file-upload-label:hover { border-color: #fff; color: #fff; background: #222; }
+        .mini-btn:hover { background: #555; color: #fff; }
+        .mini-btn.danger { color: #ff6b6b; border-color: #ff6b6b; background: transparent; }
+        .mini-btn.danger:hover { background: #ff6b6b; color: #fff; }
 
-        .slider-group { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
-        .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #aaa; margin-bottom: 5px; }
-        input[type="range"] { flex: 1; margin-left: 10px; cursor: pointer; accent-color: #fff; }
-
-        .checkbox-wrapper {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #1e1e1e; padding: 8px 10px; border-radius: 6px; border: 1px solid #333; margin-bottom: 5px;
-        }
-        .checkbox-wrapper label { cursor: pointer; font-size: 12px; color: #ccc; font-weight: bold; }
-        .checkbox-wrapper input { width: auto; cursor: pointer; }
-
-        .btn-download {
-            margin-top: auto; padding: 15px; background: #fff; color: #000; border: none;
-            border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.1); text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
-        .btn-download.loading { background: #555; color: #aaa; cursor: wait; transform: none; box-shadow: none; }
-
-        /* 오른쪽 미리보기 영역 */
-        .preview-area {
-            flex: 1; 
-            min-width: 600px; /* 최소 너비 확보하여 찌그러짐 방지 */
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            background: #000; 
-            position: relative;
-            background-image: radial-gradient(#222 1px, transparent 1px); 
-            background-size: 20px 20px;
-            height: 100vh;
+        /* === 메인 레이아웃 === */
+        #app-container {
+            display: flex; width: 100%; height: calc(100dvh - 60px); position: relative;
         }
 
-        /* === [반응형 코드 완전히 삭제됨] === */
+        /* 1. 에디터 패널 */
+        #editor-panel {
+            width: 0; 
+            display: flex; flex-direction: column; 
+            background: var(--panel-bg); border-right: 1px solid var(--border-color);
+            transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
+            position: relative; z-index: 50;
+            overflow: hidden; /* 내용 넘침 방지 (필수) */
+        }
+        #editor-panel.open { width: 40%; min-width: 350px; } 
 
-        /* === [배경 디자인] === */
-        #export-wrapper {
+        .editor-toolbar {
+            height: 40px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between;
+            background: #222; border-bottom: 1px solid #333; font-size: 12px; color: #888; font-weight: bold; flex-shrink: 0;
+            width: 100%; 
+        }
+        .editor-tools { display: flex; gap: 6px; }
+
+        textarea#live-editor {
+            flex: 1; width: 100%; background: #151515; color: #ccc; border: none; 
+            padding: 20px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; line-height: 1.6; resize: none; 
+            white-space: pre-wrap; word-break: break-all; overflow-x: hidden; 
+        }
+
+        /* 2. 프리뷰 영역 */
+        main {
+            flex: 1; position: relative; overflow: hidden; 
+            display: flex; flex-direction: column; background-color: #121212;
+            background-image: radial-gradient(#252525 1px, transparent 1px); background-size: 24px 24px;
+            transition: all 0.3s;
+        }
+        
+        .scroll-area {
+            flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; 
             padding: 40px; 
-            display: flex; justify-content: center; align-items: center;
-            transition: background 0.3s;
-            box-sizing: border-box;
-            transform-origin: center center;
+            transition: padding 0.3s ease;
+            overflow-x: hidden; 
         }
-        
-        /* 폰트 강제 적용 (시스템 폰트) */
-        #export-wrapper * {
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
-        }
-        #export-wrapper[data-theme="gowol"] *, #export-wrapper[data-theme="arpedium"] * {
-            font-family: "Batang", "Gungsuh", "Times New Roman", serif !important;
+        .editor-open-mode .scroll-area { padding: 10px; }
+
+        #scale-wrapper {
+            transform-origin: top center; transition: transform 0.2s ease-out; margin-bottom: 100px;
         }
 
-        /* 테마별 배경 */
-        #export-wrapper[data-theme="luna"] {
-            background-color: #f6f1e3;
-            background-image: linear-gradient(#dccbb0 1px, transparent 1px);
-            background-size: 100% 30px;
+        .iframe-container {
+            background: #121212; overflow: hidden; 
+            border: 12px solid var(--panel-bg); border-radius: 20px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            box-sizing: content-box; 
         }
-        #export-wrapper[data-theme="yeomgut"] {
-            background-color: #b0b0b0; 
-            background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        #export-wrapper[data-theme="eden"] {
-            background-color: #e0e0e0;
-            background-image: linear-gradient(rgba(0,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.15) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-        #export-wrapper[data-theme="nest"] { background-color: #1e261a; }
-        #export-wrapper[data-theme="arpedium"] {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(rgba(197, 160, 89, 0.1) 1.5px, transparent 1.5px);
-            background-size: 30px 30px;
-        }
-        #export-wrapper[data-theme="gowol"] { background-color: #2b2520; }
-        #export-wrapper[data-theme="geukrak"] {
-            background-color: #000;
-            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 206, 201, .1) 25%, rgba(0, 206, 201, .1) 26%, transparent 27%, transparent 74%, rgba(255, 0, 85, .1) 75%, rgba(255, 0, 85, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 206, 201, .1) 25%, rgba(0, 206, 201, .1) 26%, transparent 27%, transparent 74%, rgba(255, 0, 85, .1) 75%, rgba(255, 0, 85, .1) 76%, transparent 77%, transparent);
-            background-size: 50px 50px;
-        }
+        iframe { width: 100%; height: 100%; border: none; background: #121212; display: block; }
 
-        /* 워터마크 */
-        .inner-watermark {
-            position: absolute; bottom: 12px; left: 0; width: 100%; 
-            text-align: center; font-size: 9px; font-weight: 500; opacity: 0.6; 
-            letter-spacing: 0.5px; pointer-events: none; z-index: 100;
-        }
-        #export-wrapper[data-theme="luna"] .inner-watermark { color: #8d6e63; opacity: 0.7; }
-        #export-wrapper[data-theme="yeomgut"] .inner-watermark { color: #888; }
-        #export-wrapper[data-theme="eden"] .inner-watermark { color: #999; }
-        #export-wrapper[data-theme="nest"] .inner-watermark { color: #8a9a5b; opacity: 0.8; font-weight: bold; }
-        #export-wrapper[data-theme="arpedium"] .inner-watermark { color: #666; }
-        #export-wrapper[data-theme="gowol"] .inner-watermark { color: #5d4037; opacity: 0.6; }
-        #export-wrapper[data-theme="geukrak"] .inner-watermark { color: rgba(255,255,255,0.5); font-weight: bold; bottom: 30px; }
+        .mode-pc { width: 1050px; height: 900px; }
+        .mode-mobile { width: 375px; height: 812px; border-width: 14px; border-radius: 40px; }
 
-        /* 공통 이미지 */
-        .img-container {
-            width: 100%; height: 250px; overflow: hidden; position: relative; 
-            background: #333; margin-bottom: 15px; z-index: 1; 
+        /* [버튼 스타일] */
+        #slide-toggle-btn {
+            position: absolute; 
+            /* [요청 2] 위치를 살짝 위로 올림 (40%) */
+            top: 40%; 
+            left: 0; 
+            transform: translateY(-50%);
+            width: 24px; height: 50px; background: #333; 
+            border: 1px solid #444; border-left: none;
+            border-top-right-radius: 8px; border-bottom-right-radius: 8px;
+            z-index: 60; cursor: pointer; color: #888; display: flex; align-items: center; justify-content: center;
+            font-size: 10px;
+            transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
         }
-        .custom-img {
-            position: absolute; top: 50%; left: 50%;
-            width: 100%; height: auto; min-height: 100%; 
-            object-fit: contain; display: block;
-        }
+        #slide-toggle-btn:hover { background: #444; color: #fff; }
 
-        /* === [테마 CSS - 변경 없음] === */
-        /* 루나사가 */
-        .luna-card {
-            width: 340px; background: #fdfbf7; 
-            border: 2px solid #8d6e63; padding: 12px; border-radius: 15px;
-            box-shadow: 0 0 0 4px #5d4037, 0 15px 40px rgba(0,0,0,0.5);
-            color: #5d4037; position: relative; padding-bottom: 35px;
-        }
-        .luna-bg-deco { border: 1px dashed #d7ccc8; border-radius: 10px; padding: 15px; background: #fff; height: 100%; position: relative; }
-        .luna-deco-box { position: absolute; width: 10px; height: 10px; background: #5d4037; border-radius: 50%; }
-        .ld-tl { top: -5px; left: -5px; } .ld-tr { top: -5px; right: -5px; } 
-        .ld-bl { bottom: -5px; left: -5px; } .ld-br { bottom: -5px; right: -5px; }
-        .luna-card .img-container { height: 250px; border: 3px solid #8d6e63; border-radius: 8px; background: #eee; }
-        .luna-name { font-size: 30px; font-weight: 900; margin: 12px 0 2px; color: #3e2723; letter-spacing: -1px; text-align: center; }
-        .luna-server-wrapper { text-align: center; }
-        .luna-server { font-size: 13px; color: #fdfbf7; background: #8d6e63; display: inline-block; padding: 4px 15px; border-radius: 15px; margin-bottom: 15px; font-weight: bold; }
-        .luna-info-box { text-align: center; border-top: 2px solid #efebe9; padding-top: 15px; }
-        .luna-row { font-size: 15px; margin-bottom: 5px; font-weight: bold; color: #5d4037; display: flex; align-items: center; justify-content: center; }
-        .luna-row::before { content: "◆"; display: inline-block; font-size: 10px; color: #a1887f; margin-right: 8px; }
-        .luna-label { color: #8d6e63; margin-right: 5px; font-size: 14px; }
+        /* [PC] 패널이 열리면 버튼 이동 */
+        #editor-panel.open ~ #slide-toggle-btn { left: 40%; }
 
-        /* 염굿버스 */
-        .yeomgut-card {
-            width: 320px; background: #ffffff; 
-            border-radius: 24px; padding: 0; 
-            border: 8px solid #fff; box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
-            position: relative; overflow: hidden; padding-bottom: 35px;
+        /* 모달 스타일 */
+        .code-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center;
         }
-        .yeomgut-header-bar { height: 110px; background: var(--yg-header-color, linear-gradient(135deg, #6c5ce7, #00cec9)); position: relative; }
-        .yeomgut-card .img-container { width: 140px; height: 140px; border-radius: 50%; margin: -70px auto 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 5px solid #fff; z-index: 10; }
-        .yeomgut-body { padding: 0 30px 10px; text-align: center; }
-        .yeomgut-name { font-size: 26px; font-weight: 800; color: #2d3436; margin-bottom: 4px; letter-spacing: -0.5px; }
-        .yeomgut-ment { font-size: 14px; color: #636e72; font-style: italic; margin-bottom: 25px; display: block; }
-        .yeomgut-table { border-top: 2px solid #f1f2f6; padding-top: 20px; }
-        .yeomgut-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-        .yeomgut-label { font-size: 11px; font-weight: 900; color: #b2bec3; background: #f1f2f6; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; }
-        .yeomgut-val { font-size: 14px; font-weight: 700; color: #2d3436; }
+        .code-overlay.open { display: flex; }
+        .editor-modal { width: 700px; height: 80%; background: #222; border: 1px solid #444; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .modal-ta { flex: 1; background: #111; border: 1px solid #333; color: #ccc; padding: 15px; border-radius: 8px; resize: none; margin-bottom: 15px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
-        /* 에덴 */
-        .eden-wrapper { position: relative; width: 350px; }
-        .eden-bg-card {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #9e9e9e; transform: rotate(-3deg); z-index: 0;
-            border-radius: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .eden-card {
-            width: 100%; background: #f5f5f5; padding: 15px;
-            box-shadow: 10px 15px 30px rgba(0,0,0,0.3); 
-            position: relative; z-index: 1; padding-bottom: 35px;
-        }
-        .eden-inner { border: 2px solid #333; padding: 25px; background: #fff; height: 100%; position: relative; }
-        .eden-stripe { height: 15px; width: 100%; margin-bottom: 20px; background: repeating-linear-gradient(45deg, #333, #333 10px, #fff 10px, #fff 20px); }
-        .eden-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 3px solid #000; padding-bottom: 8px; }
-        .eden-dept { font-size: 13px; background: #000; color: #fff; padding: 4px 10px; font-weight: bold; letter-spacing: 1px;}
-        .eden-card .img-container { height: 260px; border: 2px solid #333; margin-bottom: 15px; }
-        .eden-code { font-size: 36px; font-weight: 900; color: #000; letter-spacing: -1.5px; margin-bottom: 15px; line-height: 1; text-transform: uppercase; }
-        .eden-details { font-size: 14px; line-height: 1.8; color: #333; font-weight: 600; text-align: left; }
-        .eden-details b { display: inline-block; width: 70px; font-weight: 900; background: #eee; padding-left: 5px; margin-right: 5px; font-size: 12px; }
-        .eden-stamp {
-            position: absolute; bottom: 35px; right: 25px; 
-            border: 5px solid #c00; color: #c00; padding: 5px 15px; 
-            font-weight: 900; transform: rotate(-12deg); font-size: 26px; 
-            opacity: 0.8; background: rgba(255,255,255,0.7);
-        }
+        /* 🚨 모바일 최적화 */
+        @media (max-width: 768px) {
+            .brand { display: none; } 
+            
+            .controls { 
+                display: flex; flex: 1; 
+                overflow-x: auto; white-space: nowrap; 
+                -webkit-overflow-scrolling: touch; 
+                padding-right: 10px; 
+            }
+            .controls::-webkit-scrollbar { display: none; }
 
-        /* 네스트 */
-        .nest-card {
-            width: 340px; background: #2f3330; 
-            border: 2px solid #8a9a5b; box-shadow: 0 0 0 6px #2f3330, 0 0 0 10px #556b2f, 0 20px 40px rgba(0,0,0,0.5);
-            border-radius: 40px 10px 40px 10px; padding: 35px 30px;
-            padding-bottom: 75px; position: relative;
-        }
-        .nest-card .img-container { height: 300px; border-radius: 30px 5px 30px 5px; margin-bottom: 25px; border: 1px solid #556b2f; }
-        .nest-name { color: #dcdcdc; font-size: 28px; font-weight: 800; text-align: center; letter-spacing: 2px; margin-bottom: 5px; }
-        .nest-sub { 
-            text-align: center; color: #8a9a5b; font-weight: bold; font-size: 14px; margin-bottom: 25px; 
-            display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%;
-        }
-        .nest-badge { 
-            display: table; margin: 0 auto 20px; border: 1px solid #556b2f; padding: 6px 20px; border-radius: 20px; 
-            font-size: 13px; color: #dcdcdc; background: rgba(85, 107, 47, 0.2);
-        }
-        .nest-custom-area { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #556b2f; }
-        .nest-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #aaa; }
-        .nest-row span:first-child { color: #8a9a5b; font-weight: bold; }
+            /* 에디터 패널 (Overlay) */
+            #editor-panel { 
+                position: absolute; top: 0; left: 0; height: 100%; 
+                width: 0; min-width: 0; 
+                border-right: 1px solid #333;
+                box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+                overflow: hidden; 
+            }
+            #editor-panel.open { width: 85%; } 
 
-        /* 아르페디움 */
-        .arpedium-card { width: 360px; background: #1f1f1f; padding: 15px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
-        .arpedium-border-1 { border: 1px solid #5a4a2d; padding: 4px; height: 100%; }
-        .arpedium-border-2 { border: 1px solid #1f1f1f; padding: 2px; height: 100%; }
-        .arpedium-border-3 { border: 1px solid #c5a059; padding: 35px 25px; height: 100%; text-align: center; position: relative; padding-bottom: 35px; }
-        .arpedium-deco-corner { position: absolute; width: 10px; height: 10px; border: 1px solid #eebb66; }
-        .adc-tl { top: 5px; left: 5px; border-right: 0; border-bottom: 0; } .adc-tr { top: 5px; right: 5px; border-left: 0; border-bottom: 0; }
-        .adc-bl { bottom: 5px; left: 5px; border-right: 0; border-top: 0; } .adc-br { bottom: 5px; right: 5px; border-left: 0; border-top: 0; }
-        .arpedium-card .img-container { height: 280px; border: 1px solid #c5a059; margin-bottom: 25px; }
-        .arpedium-name { font-size: 28px; color: #eebb66; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-        .arpedium-free { color: #888; font-size: 14px; font-style: italic; margin-bottom: 25px; }
-        .arpedium-details { border-top: 1px solid #444; padding-top: 20px; color: #bbb; font-size: 14px; text-align: center; }
-        .arpedium-details div { margin-bottom: 8px; }
-        .arpedium-details b { color: #c5a059; margin-right: 5px; }
+            /* [요청 1] 모바일 버튼 위치 보정 */
+            #slide-toggle-btn { 
+                left: 0; 
+                display: flex !important;
+            }
+            /* 패널이 85% 열리면 버튼도 85% 지점으로 정확히 이동 */
+            #editor-panel.open ~ #slide-toggle-btn { 
+                left: 85%; 
+                /* 혹시 모를 1px 간격 방지용 미세 조정 */
+                border-left: 1px solid #444; 
+            } 
 
-        /* 고월국 */
-        .gowol-card { width: 340px; background: #dcd3c5; padding: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; }
-        .gowol-inner { border: 2px solid #4e4039; padding: 20px; height: 100%; display: flex; flex-direction: column; position: relative; padding-bottom: 40px; }
-        .gowol-deco-corner { position: absolute; width: 15px; height: 15px; background: #4e4039; }
-        .gdc-tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); } .gdc-tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
-        .gdc-bl { bottom: 0; left: 0; clip-path: polygon(0 0, 0 100%, 100% 100%); } .gdc-br { bottom: 0; right: 0; clip-path: polygon(100% 0, 0 100%, 100% 100%); }
-        .gowol-card .img-container { height: 320px; border: 1px solid #8d6e63; margin-bottom: 20px; }
-        .gowol-name { font-size: 32px; color: #4e4039; font-weight: 800; letter-spacing: -2px; margin-bottom: 5px; text-align: center; }
-        .gowol-title { font-size: 16px; color: #6d4c41; text-align: center; margin-bottom: 20px; font-weight: bold; padding-bottom: 15px; border-bottom: 1px solid #bcaaa4; width: 100%; display: block; }
-        .gowol-info-row { width: 100%; padding: 8px 0; font-size: 16px; color: #3e2723; display: grid; grid-template-columns: 1fr 1fr; font-weight: 700; }
-        .gowol-info-row span:last-child { text-align: right; }
-
-        /* 극락시티 */
-        .geukrak-card {
-            width: 320px; background: #0a0a0a; 
-            border: 1px solid #222; box-shadow: 0 0 30px rgba(0, 206, 201, 0.15); padding: 20px; position: relative;
-            padding-bottom: 70px;
+            .editor-modal { width: 90%; height: 90%; }
         }
-        .geukrak-neon-border {
-            position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 2px dashed #00cec9; box-shadow: 0 0 5px #00cec9; pointer-events: none; z-index: 5; opacity: 0.8;
-        }
-        .geukrak-top-bar {
-            position: absolute; top: 12px; left: 12px; right: 12px; height: 2px; background: transparent; border-top: 2px dashed #ff0055; box-shadow: 0 -2px 10px #ff0055; z-index: 6;
-        }
-        .geukrak-tag { position: absolute; top: 25px; right: 25px; font-size: 11px; background: #000; border: 1px solid #ff0055; color: #ff0055; padding: 2px 8px; z-index: 10; }
-        .geukrak-card .img-container { height: 260px; border: 1px solid #333; margin: 10px 0 20px; margin-top: 30px; }
-        .geukrak-job { font-size: 30px; color: #fff; font-weight: 900; text-align: center; text-shadow: 0 0 10px rgba(255, 0, 85, 0.7); margin-bottom: 5px; letter-spacing: -1px; }
-        .geukrak-name-sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 25px; font-weight: 600; letter-spacing: 3px; display: block; }
-        .geukrak-data { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #333; padding-top: 20px; position: relative; z-index: 6; }
-        .geukrak-box { background: #0f0f0f; padding: 10px; text-align: center; border: 1px solid #222; }
-        .geukrak-label { display: block; font-size: 10px; color: #666; margin-bottom: 5px; letter-spacing: 1px; }
-        .geukrak-value { font-size: 15px; color: #00cec9; font-weight: 800; }
-        .accent-pink { color: #ff0055; }
-
     </style>
 </head>
-<body>
+<body class="editor-open-mode"> 
 
-    <div class="control-panel">
-        <div>
-            <div class="main-title">YUMGOOD<br>CARD MAKER</div>
-            <div class="main-desc">v1.6.5 PC View Only</div>
+    <header>
+        <div class="brand">YUMGOOD</div>
+        <div class="controls">
+            <button class="btn active" onclick="setView(this, 'pc')">PC Full</button>
+            <button class="btn" onclick="setView(this, 'mobile')">Mobile</button>
+            <div class="divider"></div>
+            <label class="btn">파일 열기 <input type="file" accept=".html" onchange="loadFile(event)"></label>
+            <button class="btn" onclick="openPasteModal()">코드 붙여넣기</button>
+            <button class="btn" onclick="refreshFrame()">새로고침</button>
         </div>
-        
-        <div class="input-group">
-            <label class="input-label">WORLD THEME</label>
-            <select id="theme-select" onchange="changeTheme()">
-                <option value="luna">루나사가</option>
-                <option value="yeomgut">염굿버스</option>
-                <option value="eden">에덴</option>
-                <option value="nest">네스트</option>
-                <option value="arpedium">아르페디움</option>
-                <option value="gowol">고월국</option>
-                <option value="geukrak">극락시티</option>
-            </select>
+    </header>
+
+    <div id="app-container">
+        <div id="editor-panel" class="open">
+            <div class="editor-toolbar">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span>LIVE EDITOR</span>
+                    <span id="editor-char-count" style="font-weight:400; font-size:11px; color:#666;">0자</span>
+                </div>
+                <div class="editor-tools">
+                    <button class="mini-btn" onclick="copyEditor()">전체복사</button>
+                    <button class="mini-btn danger" onclick="clearEditor()">전체삭제</button>
+                </div>
+            </div>
+            <textarea id="live-editor" placeholder="여기에 코드를 입력하세요." spellcheck="false"></textarea>
         </div>
 
-        <div class="input-group">
-            <label class="input-label">IMAGE SETTING</label>
-            <label class="file-upload-label">
-                + 이미지 파일 불러오기
-                <input type="file" id="img-upload" accept="image/*" style="display: none;" onchange="loadImage(event)">
-            </label>
-            <div class="slider-group">
-                <div class="slider-row"><span>SIZE</span> <input type="range" id="scale-range" min="0.1" max="3" step="0.1" value="1" oninput="updateTransform()"></div>
-                <div class="slider-row"><span>ROTATE</span> <input type="range" id="rotate-range" min="-180" max="180" value="0" oninput="updateTransform()"></div>
-                <div class="slider-row"><span>POS X</span> <input type="range" id="x-range" min="-200" max="200" value="0" oninput="updateTransform()"></div>
-                <div class="slider-row"><span>POS Y</span> <input type="range" id="y-range" min="-200" max="200" value="0" oninput="updateTransform()"></div>
+        <div id="slide-toggle-btn" onclick="toggleEditor()" title="에디터 열기/접기">◀</div>
+
+        <main>
+            <div class="scroll-area">
+                <div id="scale-wrapper">
+                    <div id="wrapper" class="iframe-container mode-pc">
+                        <iframe id="previewFrame"></iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="codeOverlay" class="code-overlay">
+        <div class="editor-modal">
+            <div class="modal-header">
+                <div style="color:#fff; font-weight:bold;">코드 붙여넣기</div>
+                <button class="mini-btn danger" onclick="clearModalInput()">내용 비우기</button>
+            </div>
+            <textarea id="modalInput" class="modal-ta" placeholder="HTML 코드를 붙여넣으세요..."></textarea>
+            <div class="modal-actions">
+                <button class="btn" onclick="closePasteModal()">닫기</button>
+                <button class="btn" style="background:#eee; color:#000;" onclick="applyModalCode()">적용</button>
             </div>
         </div>
-
-        <div class="input-group" style="border-bottom:none;">
-            <label class="input-label">DETAILS</label>
-            <div id="dynamic-inputs" style="display:flex; flex-direction:column; gap:8px;"></div>
-        </div>
-
-        <button id="dl-btn" class="btn-download" onclick="downloadCardSafe()">CARD DOWNLOAD ↓</button>
     </div>
-
-    <div class="preview-area" id="preview-container">
-        <div id="export-wrapper" data-theme="luna">
-            <div id="card-preview"></div>
-        </div>
-    </div>
-
-    <div id="ghost-container" style="position: absolute; left: -9999px; top: 0;"></div>
 
     <script>
-        const defaultImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='20' fill='%23666' dominant-baseline='middle' text-anchor='middle'%3ENO IMAGE%3C/text%3E%3C/svg%3E";
-        let currentImageSrc = defaultImage;
+        const frame = document.getElementById('previewFrame');
+        const wrapper = document.getElementById('wrapper');
+        const scaleWrapper = document.getElementById('scale-wrapper');
+        const liveEditor = document.getElementById('live-editor');
+        const editorPanel = document.getElementById('editor-panel');
+        const scrollArea = document.querySelector('.scroll-area');
+        const toggleBtn = document.getElementById('slide-toggle-btn');
+        const modalOverlay = document.getElementById('codeOverlay');
+        const modalInput = document.getElementById('modalInput');
+        
+        let currentBlobUrl = null;
+        let currentMode = 'pc'; 
+        let currentCode = "";
+        let debounceTimer;
 
-        const themeConfig = {
-            luna: {
-                html: `
-                    <div class="luna-card">
-                        <div class="luna-bg-deco">
-                            <div class="luna-deco-box ld-tl"></div><div class="luna-deco-box ld-tr"></div>
-                            <div class="luna-deco-box ld-bl"></div><div class="luna-deco-box ld-br"></div>
-                            <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                            <div class="luna-name" id="out-name">이름</div>
-                            <div class="luna-server-wrapper"><div class="luna-server">[<span id="out-server">서버</span>]</div></div>
-                            <div class="luna-info-box">
-                                <div class="luna-row"><span class="luna-label">Lv.</span> <span id="out-level">00</span></div>
-                                <div class="luna-row"><span class="luna-label">직업.</span> <span id="out-job">직업명</span></div>
-                                <div class="luna-row"><span class="luna-label">종족.</span> <span id="out-race">종족명</span></div>
-                                <div class="luna-row"><span class="luna-label">길드.</span> <span id="out-guild">길드명</span></div>
-                                <div class="luna-row"><span class="luna-label">랭킹.</span> <span id="out-rank">0위</span></div>
-                            </div>
-                        </div>
-                        <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                    </div>`,
-                fields: [
-                    { id: 'name', label: '이름', default: '이름' },
-                    { id: 'server', label: '서버', default: '서버명' },
-                    { id: 'level', label: '레벨', default: '00' },
-                    { id: 'job', label: '직업', default: '직업' },
-                    { id: 'race', label: '종족', default: '종족' },
-                    { id: 'guild', label: '길드', default: '길드' },
-                    { id: 'rank', label: '랭킹', default: '0위' }
-                ]
-            },
-            yeomgut: {
-                html: `
-                    <div class="yeomgut-card">
-                        <div class="yeomgut-header-bar" id="yg-header"></div>
-                        <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                        <div class="yeomgut-body">
-                            <div class="yeomgut-name" id="out-name">이름</div>
-                            <div class="yeomgut-ment" id="out-ment">"한마디"</div>
-                            <div class="yeomgut-table">
-                                <div class="yeomgut-row"><span class="yeomgut-label">AGE</span> <span class="yeomgut-val" id="out-age">00세</span></div>
-                                <div class="yeomgut-row"><span class="yeomgut-label">JOB</span> <span class="yeomgut-val" id="out-job">직업명</span></div>
-                                <div class="yeomgut-row" id="row-c1" style="display:none"><span class="yeomgut-label" id="t-c1">T1</span> <span class="yeomgut-val" id="v-c1">V1</span></div>
-                                <div class="yeomgut-row" id="row-c2" style="display:none"><span class="yeomgut-label" id="t-c2">T2</span> <span class="yeomgut-val" id="v-c2">V2</span></div>
-                                <div class="yeomgut-row" id="row-c3" style="display:none"><span class="yeomgut-label" id="t-c3">T3</span> <span class="yeomgut-val" id="v-c3">V3</span></div>
-                            </div>
-                            <div class="yeomgut-barcode"></div>
-                        </div>
-                        <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                    </div>`,
-                fields: [
-                    { type: 'color_picker', label: '헤더 색상' },
-                    { id: 'name', label: '이름', default: '이름' },
-                    { id: 'ment', label: '한마디', default: '한마디 입력' },
-                    { id: 'age', label: '나이', default: '00세' },
-                    { id: 'job', label: '직업', default: '직업' },
-                    { type: 'custom_pair', id: 'c1', label: '추가항목 1', targetRow: 'row-c1', targetT: 't-c1', targetV: 'v-c1' },
-                    { type: 'custom_pair', id: 'c2', label: '추가항목 2', targetRow: 'row-c2', targetT: 't-c2', targetV: 'v-c2' },
-                    { type: 'custom_pair', id: 'c3', label: '추가항목 3', targetRow: 'row-c3', targetT: 't-c3', targetV: 'v-c3' }
-                ]
-            },
-            eden: {
-                html: `
-                    <div class="eden-wrapper">
-                        <div class="eden-bg-card"></div>
-                        <div class="eden-card">
-                            <div class="eden-inner">
-                                <div class="eden-stripe"></div>
-                                <div class="eden-header">
-                                    <span class="eden-dept" id="out-dept">출동과</span>
-                                    <span class="eden-dept" id="eden-justitia-badge" style="background:#fff; color:#000; border:1px solid #000;">JUSTITIA</span>
-                                </div>
-                                <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                                <div class="eden-code" id="out-code">CODE</div>
-                                <div class="eden-details">
-                                    <div class="info-row"><b>NAME.</b> <span id="out-realname">실명</span></div>
-                                    <div class="info-row"><b>AGE.</b> <span id="out-age">00세</span></div>
-                                    <div class="info-row"><b>JOB.</b> <span id="out-job">직업</span></div>
-                                    <div class="info-row" id="row-kill"><b>KILL.</b> <span id="out-kill">0회</span></div>
-                                </div>
-                                <div class="eden-stamp" id="out-rank-badge">S-RANK</div>
-                            </div>
-                            <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                        </div>
-                    </div>`,
-                fields: [
-                    { id: 'dept', label: '부서', default: '출동과' },
-                    { id: 'code', label: '코드네임', default: 'CODE' },
-                    { id: 'realname', label: '실명', default: '실명' },
-                    { id: 'age', label: '나이', default: '00세' },
-                    { id: 'job', label: '직업', default: '직업' },
-                    { id: 'rank', label: '랭크 스탬프 (ON/OFF)', type: 'checkbox', target: 'out-rank-badge', checked: true, textTarget: 'out-rank-badge', defaultText: 'S-RANK' },
-                    { id: 'justitiaBadge', label: 'JUSTITIA 마크 (ON/OFF)', type: 'checkbox', target: 'eden-justitia-badge', checked: true },
-                    { id: 'kill', label: '토벌수 (ON/OFF)', type: 'checkbox', target: 'row-kill', checked: true, textTarget: 'out-kill', defaultText: '0회' }
-                ]
-            },
-            nest: {
-                html: `
-                    <div class="nest-card">
-                        <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                        <div class="nest-name" id="out-name">이름</div>
-                        <div class="nest-sub">
-                            <span id="out-region">지역</span> ・ <span id="out-race">종족</span>
-                        </div>
-                        <div style="text-align:center;">
-                            <span class="nest-badge" id="out-job">직업</span>
-                        </div>
-                        <div class="nest-custom-area">
-                            <div class="nest-row" id="row-c1" style="display:none"><span id="t-c1">T1</span> : <span id="v-c1">V1</span></div>
-                            <div class="nest-row" id="row-c2" style="display:none"><span id="t-c2">T2</span> : <span id="v-c2">V2</span></div>
-                            <div class="nest-row" id="row-c3" style="display:none"><span id="t-c3">T3</span> : <span id="v-c3">V3</span></div>
-                        </div>
-                        <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                    </div>`,
-                fields: [
-                    { id: 'name', label: '이름', default: '이름' },
-                    { id: 'region', label: '지역', default: '지역' },
-                    { id: 'race', label: '종족', default: '종족' },
-                    { id: 'job', label: '직업', default: '직업' },
-                    { type: 'custom_pair', id: 'c1', label: '추가항목 1', targetRow: 'row-c1', targetT: 't-c1', targetV: 'v-c1' },
-                    { type: 'custom_pair', id: 'c2', label: '추가항목 2', targetRow: 'row-c2', targetT: 't-c2', targetV: 'v-c2' },
-                    { type: 'custom_pair', id: 'c3', label: '추가항목 3', targetRow: 'row-c3', targetT: 't-c3', targetV: 'v-c3' }
-                ]
-            },
-            arpedium: {
-                html: `
-                    <div class="arpedium-card">
-                        <div class="arpedium-border-1">
-                            <div class="arpedium-border-2">
-                                <div class="arpedium-border-3">
-                                    <div class="arpedium-deco-corner adc-tl"></div><div class="arpedium-deco-corner adc-tr"></div>
-                                    <div class="arpedium-deco-corner adc-bl"></div><div class="arpedium-deco-corner adc-br"></div>
-                                    <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                                    <div class="arpedium-name" id="out-name">Name</div>
-                                    <div class="arpedium-free" id="out-free">자유 문구 입력</div>
-                                    <div class="arpedium-details">
-                                        <div><b>Age.</b> <span id="out-age">00</span></div>
-                                        <div><b>Family.</b> <span id="out-family">가문</span></div>
-                                        <div><b>Job.</b> <span id="out-job">직업</span></div>
-                                    </div>
-                                    <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`,
-                fields: [
-                    { id: 'name', label: '이름', default: 'Name' },
-                    { id: 'free', label: '자유 기입', default: '자유 내용 입력' },
-                    { id: 'age', label: '나이', default: '00' },
-                    { id: 'family', label: '가문', default: '가문명' },
-                    { id: 'job', label: '직업', default: '직위' }
-                ]
-            },
-            gowol: {
-                html: `
-                    <div class="gowol-card">
-                        <div class="gowol-inner">
-                            <div class="gowol-deco-corner gdc-tl"></div><div class="gowol-deco-corner gdc-tr"></div>
-                            <div class="gowol-deco-corner gdc-bl"></div><div class="gowol-deco-corner gdc-br"></div>
-                            <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                            <div class="gowol-name" id="out-name">이름</div>
-                            <div class="gowol-title" id="out-title">타이틀</div>
-                            <div style="margin-top:auto">
-                                <div class="gowol-info-row"><span>나이</span> <span id="out-age">00세</span></div>
-                                <div class="gowol-info-row" id="row-family"><span>가문</span> <span id="out-family">가문명</span></div>
-                                <div class="gowol-info-row"><span>직업</span> <span id="out-job">직업명</span></div>
-                            </div>
-                            <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                        </div>
-                    </div>`,
-                fields: [
-                    { id: 'name', label: '이름', default: '이름' },
-                    { id: 'title', label: '타이틀', default: '타이틀' },
-                    { id: 'age', label: '나이', default: '00세' },
-                    { id: 'job', label: '직업', default: '직업' },
-                    { id: 'familyCheck', label: '가문 표시 (ON/OFF)', type: 'checkbox', target: 'row-family', checked: true, textTarget: 'out-family', defaultText: '가문명' }
-                ]
-            },
-            geukrak: {
-                html: `
-                    <div class="geukrak-card">
-                        <div class="geukrak-neon-border"></div>
-                        <div class="geukrak-top-bar"></div>
-                        <div class="geukrak-tag" id="out-race">종족</div>
-                        <div class="img-container"><img id="preview-img" class="custom-img" src=""></div>
-                        <div class="geukrak-job" id="out-jobtitle">직함</div>
-                        <div class="geukrak-name-sub" id="out-name">이름</div>
-                        <div class="geukrak-data">
-                            <div class="geukrak-box">
-                                <span class="geukrak-label">AGE</span>
-                                <span class="geukrak-value accent-pink" id="out-age">00</span>
-                            </div>
-                            <div class="geukrak-box">
-                                <span class="geukrak-label">RACE</span>
-                                <span class="geukrak-value" id="out-race2">종족</span>
-                            </div>
-                        </div>
-                        <div class="inner-watermark">Rofan AI & CaveDuck @yumgood</div>
-                    </div>`,
-                fields: [
-                    { id: 'race', label: '종족 (Tag)', default: '종족' },
-                    { id: 'jobtitle', label: '직함', default: '직함' },
-                    { id: 'name', label: '이름', default: '이름' },
-                    { id: 'age', label: '나이', default: '00' }
-                ]
-            }
-        };
-
-        function changeTheme() {
-            const theme = document.getElementById('theme-select').value;
-            const config = themeConfig[theme];
+        // === 1. 에디터 토글 ===
+        function toggleEditor() {
+            const isOpen = editorPanel.classList.toggle('open');
+            document.body.classList.toggle('editor-open-mode', isOpen);
             
-            document.getElementById('export-wrapper').setAttribute('data-theme', theme);
-            document.getElementById('card-preview').innerHTML = config.html;
+            toggleBtn.innerText = isOpen ? "◀" : "▶";
             
-            document.getElementById('preview-img').src = currentImageSrc;
-            updateTransform();
-
-            const inputsDiv = document.getElementById('dynamic-inputs');
-            inputsDiv.innerHTML = ''; 
-
-            config.fields.forEach(field => {
-                if (field.type === 'color_picker') {
-                    const group = document.createElement('div');
-                    group.className = 'input-group';
-                    group.innerHTML = `<span class="input-label">${field.label}</span>`;
-                    const row = document.createElement('div');
-                    row.className = 'color-picker-group';
-                    const colorInput = document.createElement('input');
-                    colorInput.type = 'color'; colorInput.value = '#6c5ce7';
-                    const colorText = document.createElement('input');
-                    colorText.type = 'text'; colorText.value = '#6c5ce7';
-                    colorInput.oninput = (e) => { colorText.value = e.target.value; updateHeaderColor(e.target.value); };
-                    colorText.oninput = (e) => { colorInput.value = e.target.value; updateHeaderColor(e.target.value); };
-                    row.appendChild(colorInput); row.appendChild(colorText);
-                    group.appendChild(row); inputsDiv.appendChild(group);
-
-                } else if (field.type === 'custom_pair') {
-                    const group = document.createElement('div');
-                    group.className = 'input-group';
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'checkbox-wrapper';
-                    const label = document.createElement('label');
-                    label.innerText = field.label + " 사용";
-                    label.htmlFor = `chk-${field.id}`;
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `chk-${field.id}`;
-                    checkbox.checked = false;
-                    checkbox.onchange = () => toggleDisplay(field.targetRow, checkbox.checked);
-                    wrapper.appendChild(label); wrapper.appendChild(checkbox); group.appendChild(wrapper);
-
-                    const rowInputs = document.createElement('div');
-                    rowInputs.className = 'custom-row-inputs';
-                    const tInput = document.createElement('input');
-                    tInput.type = 'text'; tInput.className = 'title'; tInput.value = ''; tInput.placeholder = '추가항목';
-                    tInput.oninput = (e) => updateText(field.targetT, e.target.value || '추가항목');
-                    const vInput = document.createElement('input');
-                    vInput.type = 'text'; vInput.className = 'val'; vInput.value = ''; vInput.placeholder = '내용';
-                    vInput.oninput = (e) => updateText(field.targetV, e.target.value || '내용');
-                    rowInputs.appendChild(tInput); rowInputs.appendChild(vInput);
-                    group.appendChild(rowInputs); inputsDiv.appendChild(group);
-                    updateText(field.targetT, '추가항목'); updateText(field.targetV, '내용');
-                    toggleDisplay(field.targetRow, false);
-
-                } else if (field.type === 'checkbox') {
-                    const group = document.createElement('div');
-                    group.className = 'input-group';
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'checkbox-wrapper';
-                    const label = document.createElement('label');
-                    label.innerText = field.label;
-                    label.htmlFor = `input-${field.id}`;
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox'; checkbox.checked = field.checked; checkbox.id = `input-${field.id}`;
-                    checkbox.onchange = () => toggleDisplay(field.target, checkbox.checked);
-                    wrapper.appendChild(label); wrapper.appendChild(checkbox); group.appendChild(wrapper);
-
-                    if(field.textTarget) {
-                        const input = document.createElement('input');
-                        input.type = 'text'; input.value = ''; input.placeholder = field.defaultText;
-                        input.oninput = (e) => updateText(field.textTarget, e.target.value || field.defaultText);
-                        group.appendChild(input); updateText(field.textTarget, field.defaultText);
-                    }
-                    inputsDiv.appendChild(group); toggleDisplay(field.target, field.checked);
-
-                } else {
-                    const group = document.createElement('div');
-                    group.className = 'input-group';
-                    const label = document.createElement('span');
-                    label.className = 'input-label'; label.innerText = field.label;
-                    const input = document.createElement('input');
-                    input.type = 'text'; input.value = ''; input.placeholder = field.default;
-                    input.oninput = (e) => {
-                        const val = e.target.value || field.default;
-                        if(theme === 'geukrak' && field.id === 'race') {
-                            updateText('out-race', val); updateText('out-race2', val);
-                        } else {
-                            updateText(`out-${field.id}`, val);
-                        }
-                    };
-                    group.appendChild(label); group.appendChild(input); inputsDiv.appendChild(group);
-                    if(theme === 'geukrak' && field.id === 'race') {
-                        updateText('out-race', field.default); updateText('out-race2', field.default);
-                    } else {
-                        updateText(`out-${field.id}`, field.default);
-                    }
-                }
-            });
-            // 모바일 최적화 함수(fitPreviewToScreen) 삭제됨
+            setTimeout(fitToScreen, 50);  
+            setTimeout(fitToScreen, 200); 
+            setTimeout(fitToScreen, 360); 
         }
 
-        function updateText(targetId, value) {
-            const el = document.getElementById(targetId);
-            if(el) el.innerText = value;
-        }
+        // === 2. 실시간 에디터 ===
+        liveEditor.addEventListener('input', function() {
+            const code = this.value;
+            currentCode = code;
+            document.getElementById('editor-char-count').innerText = code.length.toLocaleString() + "자";
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => updatePreview(code), 300);
+        });
 
-        function toggleDisplay(targetId, isChecked) {
-            const el = document.getElementById(targetId);
-            if(el) {
-                if(!isChecked) el.style.display = 'none';
-                else el.style.display = (el.classList.contains('yeomgut-row') || el.classList.contains('nest-row') || el.classList.contains('luna-row') || el.classList.contains('gowol-info-row')) ? 'flex' : 'block';
-                if(el.classList.contains('gowol-info-row')) el.style.display = 'grid';
-            }
-        }
-
-        function updateHeaderColor(color) {
-            const header = document.getElementById('yg-header');
-            if(header) header.style.background = color;
-        }
-
-        function loadImage(event) {
+        // === 3. 파일/코드 로드 ===
+        function loadFile(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentImageSrc = e.target.result;
-                    document.getElementById('preview-img').src = currentImageSrc;
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                setCode(e.target.result);
+                if(!editorPanel.classList.contains('open')) toggleEditor();
+                event.target.value = ''; 
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function openPasteModal() {
+            modalOverlay.classList.add('open');
+            modalInput.value = currentCode; 
+            modalInput.focus();
+        }
+        function closePasteModal() { modalOverlay.classList.remove('open'); }
+        function clearModalInput() { modalInput.value = ''; modalInput.focus(); }
+
+        function applyModalCode() {
+            setCode(modalInput.value);
+            closePasteModal();
+            if(!editorPanel.classList.contains('open')) toggleEditor();
+        }
+
+        function copyEditor() {
+            if (!liveEditor.value) return;
+            navigator.clipboard.writeText(liveEditor.value).then(() => alert('코드가 복사되었습니다.'));
+        }
+        function clearEditor() {
+            if(confirm('정말 내용을 모두 지우시겠습니까?')) setCode('');
+        }
+
+        function setCode(code) {
+            currentCode = code;
+            liveEditor.value = code;
+            document.getElementById('editor-char-count').innerText = code.length.toLocaleString() + "자";
+            updatePreview(code);
+        }
+
+        function updatePreview(htmlContent) {
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            currentBlobUrl = URL.createObjectURL(blob);
+            frame.src = currentBlobUrl;
+        }
+
+        // === 4. 화면 배율 자동 조정 ===
+        function fitToScreen() {
+            if (currentMode === 'mobile') {
+                const requiredWidth = 375 + 40; 
+                const availableWidth = window.innerWidth;
+                
+                if (availableWidth < requiredWidth) {
+                    let scale = availableWidth / requiredWidth;
+                    scaleWrapper.style.transform = `scale(${scale})`;
+                } else {
+                    scaleWrapper.style.transform = 'scale(1)';
                 }
-                reader.readAsDataURL(file);
+                return;
             }
-        }
 
-        function updateTransform() {
-            const scale = document.getElementById('scale-range').value;
-            const rotate = document.getElementById('rotate-range').value;
-            const x = document.getElementById('x-range').value;
-            const y = document.getElementById('y-range').value;
+            // PC 모드 로직
+            const targetWidth = 1080; 
+            let availableWidth = scrollArea.clientWidth; 
 
-            const clones = document.querySelectorAll('.custom-img');
-            clones.forEach(el => {
-                el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale}) rotate(${rotate}deg)`;
-            });
-        }
-
-        // 다운로드는 여전히 안전한 Ghost 방식으로 (화면 스크롤 상태와 무관하게 캡처)
-        function downloadCardSafe() {
-            const originalNode = document.getElementById('export-wrapper');
-            const ghostContainer = document.getElementById('ghost-container');
-            const btn = document.getElementById('dl-btn');
-            const originalText = btn.innerText;
-
-            btn.innerText = "생성 중... ⏳";
-            btn.classList.add('loading');
-
-            const clone = originalNode.cloneNode(true);
-            clone.style.transform = 'none';
-            clone.style.margin = '0';
+            const isMobileScreen = window.innerWidth <= 768;
+            const padding = editorPanel.classList.contains('open') ? 20 : (isMobileScreen ? 20 : 80);
             
-            ghostContainer.innerHTML = '';
-            ghostContainer.appendChild(clone);
-
-            setTimeout(() => {
-                htmlToImage.toPng(clone, {
-                    quality: 1.0,
-                    pixelRatio: 2, 
-                    backgroundColor: null,
-                })
-                .then(function (dataUrl) {
-                    download(dataUrl, `yumgood_card_${Date.now()}.png`);
-                    ghostContainer.innerHTML = '';
-                    btn.innerText = originalText;
-                    btn.classList.remove('loading');
-                })
-                .catch(function (error) {
-                    console.error('Download Error:', error);
-                    alert("오류 발생. 다시 시도해주세요.");
-                    ghostContainer.innerHTML = ''; 
-                    btn.innerText = originalText;
-                    btn.classList.remove('loading');
-                });
-            }, 100);
+            let scale = (availableWidth - padding) / targetWidth;
+            if (scale > 1) scale = 1; 
+            if (scale < 0.2) scale = 0.2;
+            
+            scaleWrapper.style.transform = `scale(${scale})`;
         }
 
-        window.onload = changeTheme;
+        window.addEventListener('resize', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(fitToScreen, 100); });
+
+        function setView(btn, mode) {
+            document.querySelectorAll('.controls .btn').forEach(b => {
+                if(['PC Full', 'Mobile'].includes(b.innerText)) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            currentMode = mode;
+            wrapper.className = 'iframe-container';
+            wrapper.classList.add('mode-' + mode);
+            
+            fitToScreen();
+        }
+
+        function refreshFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); }
+
+        fitToScreen();
     </script>
 </body>
 </html>
